@@ -42,7 +42,7 @@ export default function EarningsPage() {
     const fetchEarnings = async () => {
       try {
         // Fetch wallet info
-        const walletResponse = await axiosInstance.get('/api/wallet');
+        const walletResponse = await axiosInstance.get('/api/wallet/balance');
         if (walletResponse.data.success) {
           setWalletBalance(walletResponse.data.data?.balance || 0);
         }
@@ -51,7 +51,7 @@ export default function EarningsPage() {
         const response = await axiosInstance.get('/api/wallet/transactions?limit=100');
         if (response.data.success) {
           // Filter only earnings transactions (MATCHING_INCOME only - referral income removed)
-          const earnings = response.data.data.filter((t: Transaction) => 
+          const earnings = response.data.data.filter((t: Transaction) =>
             t.amount > 0 && t.type === 'MATCHING_INCOME'
           );
           setTransactions(earnings);
@@ -70,7 +70,7 @@ export default function EarningsPage() {
 
   // Calculate stats
   const totalEarnings = transactions.reduce((sum, t) => sum + t.amount, 0);
-  
+
   const matchingIncome = transactions
     .filter(t => t.type === 'MATCHING_INCOME')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -124,7 +124,7 @@ export default function EarningsPage() {
           gradient="bg-primary-500"
           trend={{ value: "All time matching income", isPositive: true }}
         />
-      
+
         <StatsCard
           label="Wallet Balance"
           value={`₹${walletBalance.toLocaleString()}`}
@@ -159,7 +159,7 @@ export default function EarningsPage() {
           <div>
             <h3 className="text-lg font-semibold text-green-900 mb-2">Binary Matching Income</h3>
             <p className="text-sm text-green-700 mb-3">
-              Earn by building balanced teams on both left and right legs. When PV accumulates on both sides, 
+              Earn by building balanced teams on both left and right legs. When PV accumulates on both sides,
               the system matches them and pays you based on your plan's matching rate.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">

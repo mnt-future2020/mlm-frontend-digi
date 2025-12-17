@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, TrendingUp, Wallet, Gift, ArrowRight, UserPlus, CreditCard, Network } from "lucide-react";
+import { Users, TrendingUp, Wallet, Gift, ArrowRight, UserPlus, CreditCard, Network, Share2, Copy, Check } from "lucide-react";
 import { PageContainer, PageHeader, StatsCard } from "@/components/ui/page-components";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -35,6 +35,8 @@ interface DashboardData {
     total: number;
     left: number;
     right: number;
+    rightTeamSize?: number;
+    leftTeamSize?: number;
   };
   currentPlan: any;
   rank?: {
@@ -50,6 +52,10 @@ export default function UserDashboard() {
   const { user, refreshUser } = useAuth();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Referral Copy States
+  const [copiedLeft, setCopiedLeft] = useState(false);
+  const [copiedRight, setCopiedRight] = useState(false);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -79,6 +85,27 @@ export default function UserDashboard() {
       fetchDashboard();
     }
   }, [user, refreshUser]);
+
+  const copyLink = (placement: 'LEFT' | 'RIGHT') => {
+    if (!user?.referralId) return;
+    const link = `${window.location.origin}/register?ref=${user.referralId}&place=${placement}`;
+    navigator.clipboard.writeText(link);
+    if (placement === 'LEFT') {
+      setCopiedLeft(true);
+      setTimeout(() => setCopiedLeft(false), 2000);
+    } else {
+      setCopiedRight(true);
+      setTimeout(() => setCopiedRight(false), 2000);
+    }
+  };
+
+  const shareOnWhatsApp = (placement: 'LEFT' | 'RIGHT') => {
+    if (!user?.referralId) return;
+    const link = `${window.location.origin}/register?ref=${user.referralId}&place=${placement}`;
+    const text = `Join my team on VSV Unite! Register here: ${link}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
   if (loading) {
     return (
@@ -124,20 +151,6 @@ export default function UserDashboard() {
           gradient="bg-primary-500"
           trend={{ value: "Ready to withdraw", isPositive: true }}
         />
-        {/* <StatsCard
-          label="Pending Withdrawals"
-          value={`₹${dashboardData?.wallet?.pendingWithdrawals || 0}`}
-          icon={<Clock className="w-6 h-6 text-orange-600" />}
-          gradient="bg-orange-500"
-          trend={{ value: "Processing", isPositive: true }}
-        /> */}
-        {/* <StatsCard
-          label="Referral Income"
-          value={`₹${dashboardData?.wallet?.referralIncome || 0}`}
-          icon={<Users className="w-6 h-6 text-purple-600" />}
-          gradient="bg-purple-500"
-          trend={{ value: "Direct Referrals", isPositive: true }}
-        /> */}
         <StatsCard
           label="Matching Income"
           value={`₹${dashboardData?.wallet?.matchingIncome || 0}`}
@@ -173,6 +186,59 @@ export default function UserDashboard() {
             </p>
           </div>
         )}
+      </div>
+
+      {/* Referral Links Card */}
+      <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-6 shadow-lg text-white mb-8">
+        <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+          <Share2 className="w-5 h-5" /> Referral Center
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left Link */}
+          <div>
+            <p className="text-sm text-indigo-100 mb-2">Left Team Link</p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={() => copyLink('LEFT')}
+                className="flex-1 bg-white/20 hover:bg-white/30 text-white border-0"
+              >
+                {copiedLeft ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+                Copy
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => shareOnWhatsApp('LEFT')}
+                className="bg-green-500 hover:bg-green-600 text-white border-0"
+              >
+                <Share2 className="w-4 h-4" /> Whatsapp
+              </Button>
+            </div>
+          </div>
+
+          {/* Right Link */}
+          <div>
+            <p className="text-sm text-indigo-100 mb-2">Right Team Link</p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={() => copyLink('RIGHT')}
+                className="flex-1 bg-white/20 hover:bg-white/30 text-white border-0"
+              >
+                {copiedRight ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+                Copy
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => shareOnWhatsApp('RIGHT')}
+                className="bg-green-500 hover:bg-green-600 text-white border-0"
+              >
+                <Share2 className="w-4 h-4" /> Whatsapp
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -248,60 +314,6 @@ export default function UserDashboard() {
           </div>
         </div>
       </div>
-
-      {/* Team Structure Preview */}
-      {/* <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-foreground">Team Overview</h2>
-          <Link href="/dashboard/team/tree">
-            <Button variant="outline" size="sm" className="gap-2">
-              View Full Tree
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-          <div className="flex flex-col items-center justify-center p-6 bg-primary-50 rounded-xl border border-primary-100">
-            <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center mb-3 shadow-sm">
-              <Users className="w-8 h-8 text-primary-600" />
-            </div>
-            <p className="text-sm font-medium text-muted-foreground mb-1">Total Team</p>
-            <p className="text-3xl font-bold text-primary-700">{dashboardData?.team?.total || 0}</p>
-          </div>
-          
-          <div className="md:col-span-2 grid grid-cols-2 gap-4">
-            <div className="p-4 rounded-xl border border-border bg-card hover:border-blue-200 hover:bg-blue-50/30 transition-colors">
-              <p className="text-sm text-muted-foreground mb-1">Left Team</p>
-              <div className="flex items-end justify-between">
-                <p className="text-2xl font-bold text-foreground">{dashboardData?.team?.left || 0}</p>
-                <div className="h-1.5 w-24 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-blue-500 rounded-full" 
-                    style={{ 
-                      width: dashboardData?.team?.total ? `${(dashboardData.team.left / dashboardData.team.total) * 100}%` : '0%' 
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="p-4 rounded-xl border border-border bg-card hover:border-purple-200 hover:bg-purple-50/30 transition-colors">
-              <p className="text-sm text-muted-foreground mb-1">Right Team</p>
-              <div className="flex items-end justify-between">
-                <p className="text-2xl font-bold text-foreground">{dashboardData?.team?.right || 0}</p>
-                <div className="h-1.5 w-24 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-purple-500 rounded-full" 
-                    style={{ 
-                      width: dashboardData?.team?.total ? `${(dashboardData.team.right / dashboardData.team.total) * 100}%` : '0%' 
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div> */}
     </PageContainer>
   );
 }

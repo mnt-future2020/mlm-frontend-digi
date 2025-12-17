@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Upload, CheckCircle2, XCircle, Clock, AlertCircle, FileImage, User, Camera } from "lucide-react";
+import { Upload, CheckCircle2, XCircle, Clock, AlertCircle, FileImage, User, Camera, CreditCard, FileText } from "lucide-react";
 
 interface KYCData {
   kycStatus: string;
@@ -28,8 +28,12 @@ export default function KYCPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [kycData, setKycData] = useState<KYCData | null>(null);
-  const idProofInputRef = useRef<HTMLInputElement>(null);
+
+  // File refs
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
+  const panCardInputRef = useRef<HTMLInputElement>(null);
+  const aadharCardInputRef = useRef<HTMLInputElement>(null);
+  const bankPassbookInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -38,23 +42,35 @@ export default function KYCPage() {
     address: "",
     dob: "",
     nomineeName: "",
-    idNumber: "",
     bank: {
       accountName: "",
       accountNumber: "",
       ifsc: "",
       bankName: ""
     },
-    idProofBase64: "",
-    profilePhotoBase64: ""
+    profilePhotoBase64: "",
+    panCardBase64: "",
+    aadharCardBase64: "",
+    bankPassbookBase64: ""
   });
 
-  const [idProofPreview, setIdProofPreview] = useState<string | null>(null);
+  // Previews
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
-  const [idProofError, setIdProofError] = useState<string | null>(null);
+  const [panCardPreview, setPanCardPreview] = useState<string | null>(null);
+  const [aadharCardPreview, setAadharCardPreview] = useState<string | null>(null);
+  const [bankPassbookPreview, setBankPassbookPreview] = useState<string | null>(null);
+
+  // Errors
   const [profilePhotoError, setProfilePhotoError] = useState<string | null>(null);
-  const [idProofSize, setIdProofSize] = useState<number>(0);
+  const [panCardError, setPanCardError] = useState<string | null>(null);
+  const [aadharCardError, setAadharCardError] = useState<string | null>(null);
+  const [bankPassbookError, setBankPassbookError] = useState<string | null>(null);
+
+  // Sizes for display
   const [profilePhotoSize, setProfilePhotoSize] = useState<number>(0);
+  const [panCardSize, setPanCardSize] = useState<number>(0);
+  const [aadharCardSize, setAadharCardSize] = useState<number>(0);
+  const [bankPassbookSize, setBankPassbookSize] = useState<number>(0);
 
   useEffect(() => {
     fetchKYCStatus();
@@ -80,18 +96,16 @@ export default function KYCPage() {
         // Pre-fill form if there's a previous submission
         if (response.data.data?.submission?.form) {
           const form = response.data.data.submission.form;
-          setFormData({
+          setFormData(prev => ({
+            ...prev,
             name: form.name || "",
             email: form.email || "",
             phone: form.phone || "",
             address: form.address || "",
             dob: form.dob || "",
             nomineeName: form.nomineeName || "",
-            idNumber: form.idNumber || "",
             bank: form.bank || { accountName: "", accountNumber: "", ifsc: "", bankName: "" },
-            idProofBase64: "",
-            profilePhotoBase64: ""
-          });
+          }));
         }
       }
     } catch (error) {
@@ -103,30 +117,54 @@ export default function KYCPage() {
 
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    type: 'idProof' | 'profilePhoto'
+    type: 'profilePhoto' | 'panCard' | 'aadharCard' | 'bankPassbook'
   ) => {
     const file = e.target.files?.[0];
-    const setError = type === 'idProof' ? setIdProofError : setProfilePhotoError;
-    const setPreview = type === 'idProof' ? setIdProofPreview : setProfilePhotoPreview;
-    const setSize = type === 'idProof' ? setIdProofSize : setProfilePhotoSize;
-    const fieldName = type === 'idProof' ? 'idProofBase64' : 'profilePhotoBase64';
+    let setError, setPreview, setSize, fieldName;
 
-    setError(null);
+    switch (type) {
+      case 'profilePhoto':
+        setError = setProfilePhotoError;
+        setPreview = setProfilePhotoPreview;
+        setSize = setProfilePhotoSize;
+        fieldName = 'profilePhotoBase64';
+        break;
+      case 'panCard':
+        setError = setPanCardError;
+        setPreview = setPanCardPreview;
+        setSize = setPanCardSize;
+        fieldName = 'panCardBase64';
+        break;
+      case 'aadharCard':
+        setError = setAadharCardError;
+        setPreview = setAadharCardPreview;
+        setSize = setAadharCardSize;
+        fieldName = 'aadharCardBase64';
+        break;
+      case 'bankPassbook':
+        setError = setBankPassbookError;
+        setPreview = setBankPassbookPreview;
+        setSize = setBankPassbookSize;
+        fieldName = 'bankPassbookBase64';
+        break;
+    }
+
+    if (setError) setError(null);
 
     if (!file) return;
 
     // Validate file type
     if (!file.type.includes('jpeg') && !file.type.includes('jpg')) {
-      setError("Only JPEG images are allowed");
+      if (setError) setError("Only JPEG images are allowed");
       return;
     }
 
     // Validate file size (500KB = 512000 bytes)
     const sizeKB = file.size / 1024;
-    setSize(sizeKB);
+    if (setSize) setSize(sizeKB);
 
     if (sizeKB > 500) {
-      setError(`File size must be under 500KB. Current size: ${sizeKB.toFixed(1)}KB`);
+      if (setError) setError(`File size must be under 500KB. Current size: ${sizeKB.toFixed(1)}KB`);
       return;
     }
 
@@ -134,7 +172,7 @@ export default function KYCPage() {
     const reader = new FileReader();
     reader.onload = (event) => {
       const base64 = event.target?.result as string;
-      setPreview(base64);
+      if (setPreview) setPreview(base64);
       setFormData(prev => ({ ...prev, [fieldName]: base64 }));
     };
     reader.readAsDataURL(file);
@@ -143,8 +181,8 @@ export default function KYCPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.idProofBase64) {
-      toast.error("Please upload your ID proof");
+    if (!formData.panCardBase64 || !formData.aadharCardBase64 || !formData.bankPassbookBase64) {
+      toast.error("Please upload all required documents (PAN, Aadhar, Bank Passbook)");
       return;
     }
 
@@ -169,7 +207,7 @@ export default function KYCPage() {
         return (
           <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-lg">
             <AlertCircle className="w-5 h-5" />
-            <span>KYC Pending - Please complete your KYC</span>
+            <span>KYC Pending - Please complete your KYC details</span>
           </div>
         );
       case "KYC_SUBMITTED":
@@ -197,6 +235,43 @@ export default function KYCPage() {
         return null;
     }
   };
+
+  const UploadBox = ({ label, inputRef, preview, error, size, onChange, icon: Icon }: any) => (
+    <div className="space-y-2">
+      <Label>{label} *</Label>
+      <div className="mt-2">
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/jpeg,image/jpg"
+          onChange={onChange}
+          className="hidden"
+        />
+        <div
+          onClick={() => inputRef.current?.click()}
+          className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors relative h-48 flex flex-col items-center justify-center
+              ${error ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'}`}
+        >
+          {preview ? (
+            <div className="space-y-2 w-full h-full flex flex-col items-center justify-center">
+              <img src={preview} alt="Preview" className="max-h-32 object-contain rounded" />
+              <div className="text-xs text-center w-full">
+                <p className="text-gray-600">{size.toFixed(1)}KB</p>
+                <p className="text-blue-600">Click to change</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Icon className="w-10 h-10 mx-auto text-gray-400" />
+              <p className="text-sm font-medium text-gray-700">Upload {label}</p>
+              <p className="text-xs text-gray-500">JPEG, Max 500KB</p>
+            </div>
+          )}
+        </div>
+        {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -275,10 +350,13 @@ export default function KYCPage() {
           )}
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6" data-testid="kyc-form">
-            {/* Profile Photo Upload */}
+          <form onSubmit={handleSubmit} className="space-y-8" data-testid="kyc-form">
+
+            {/* 1. Profile Photo */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Profile Photo</h3>
+              <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 flex items-center gap-2">
+                <User className="w-5 h-5 text-primary-600" /> Profile Photo
+              </h3>
               <div className="flex justify-center">
                 <div className="relative">
                   <input
@@ -291,7 +369,7 @@ export default function KYCPage() {
                   />
                   <div
                     onClick={() => profilePhotoInputRef.current?.click()}
-                    className={`w-32 h-32 rounded-full border-4 cursor-pointer overflow-hidden transition-all
+                    className={`w-32 h-32 rounded-full border-4 cursor-pointer overflow-hidden transition-all shadow-sm
                       ${profilePhotoError ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-blue-400 bg-gray-50'}`}
                   >
                     {profilePhotoPreview ? (
@@ -311,13 +389,14 @@ export default function KYCPage() {
               {profilePhotoError && (
                 <p className="text-sm text-red-600 text-center">{profilePhotoError}</p>
               )}
-              <p className="text-xs text-gray-500 text-center">Click to upload profile photo (JPEG, max 500KB)</p>
-              <p className="text-xs text-amber-600 text-center">This photo will be displayed in your Tree View</p>
+              <p className="text-xs text-gray-500 text-center">Click to upload (JPEG, max 500KB)</p>
             </div>
 
-            {/* Personal Information */}
+            {/* 2. Personal Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Personal Information</h3>
+              <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary-600" /> Personal Information
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name">Full Name *</Label>
@@ -385,60 +464,47 @@ export default function KYCPage() {
               </div>
             </div>
 
-            {/* ID Proof */}
+            {/* 3. Document Uploads */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Identity Verification</h3>
-              <div>
-                <Label htmlFor="idNumber">PAN / Aadhaar Number *</Label>
-                <Input
-                  id="idNumber"
-                  value={formData.idNumber}
-                  onChange={(e) => setFormData(prev => ({ ...prev, idNumber: e.target.value }))}
-                  placeholder="Enter your PAN or Aadhaar number"
-                  required
-                  data-testid="kyc-id-number-input"
+              <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-primary-600" /> Documents Verification
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <UploadBox
+                  label="PAN Card"
+                  inputRef={panCardInputRef}
+                  preview={panCardPreview}
+                  error={panCardError}
+                  size={panCardSize}
+                  onChange={(e: any) => handleFileChange(e, 'panCard')}
+                  icon={CreditCard}
                 />
-              </div>
-              <div>
-                <Label>ID Proof Document (JPEG only, max 500KB) *</Label>
-                <div className="mt-2">
-                  <input
-                    ref={idProofInputRef}
-                    type="file"
-                    accept="image/jpeg,image/jpg"
-                    onChange={(e) => handleFileChange(e, 'idProof')}
-                    className="hidden"
-                    data-testid="id-proof-input"
-                  />
-                  <div
-                    onClick={() => idProofInputRef.current?.click()}
-                    className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-                      ${idProofError ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'}`}
-                  >
-                    {idProofPreview ? (
-                      <div className="space-y-2">
-                        <img src={idProofPreview} alt="ID Preview" className="max-h-40 mx-auto rounded" />
-                        <p className="text-sm text-gray-600">Size: {idProofSize.toFixed(1)}KB</p>
-                        <p className="text-sm text-blue-600">Click to change</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <FileImage className="w-12 h-12 mx-auto text-gray-400" />
-                        <p className="text-gray-600">Click to upload JPEG image</p>
-                        <p className="text-sm text-gray-400">Maximum size: 500KB</p>
-                      </div>
-                    )}
-                  </div>
-                  {idProofError && (
-                    <p className="mt-2 text-sm text-red-600">{idProofError}</p>
-                  )}
-                </div>
+                <UploadBox
+                  label="Aadhar Card"
+                  inputRef={aadharCardInputRef}
+                  preview={aadharCardPreview}
+                  error={aadharCardError}
+                  size={aadharCardSize}
+                  onChange={(e: any) => handleFileChange(e, 'aadharCard')}
+                  icon={CreditCard}
+                />
+                <UploadBox
+                  label="Bank Passbook"
+                  inputRef={bankPassbookInputRef}
+                  preview={bankPassbookPreview}
+                  error={bankPassbookError}
+                  size={bankPassbookSize}
+                  onChange={(e: any) => handleFileChange(e, 'bankPassbook')}
+                  icon={FileText}
+                />
               </div>
             </div>
 
-            {/* Bank Details */}
+            {/* 4. Bank Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Bank Details</h3>
+              <h3 className="text-lg font-semibold text-gray-800 border-b pb-2 flex items-center gap-2">
+                <i className="lucide-banknote w-5 h-5 text-primary-600" /> Bank Details
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="accountName">Account Holder Name</Label>
@@ -493,19 +559,19 @@ export default function KYCPage() {
 
             <Button
               type="submit"
-              className="w-full"
-              disabled={submitting || !!idProofError || !formData.idProofBase64}
+              className="w-full py-6 text-lg font-semibold"
+              disabled={submitting || !!panCardError || !!aadharCardError || !!bankPassbookError}
               data-testid="kyc-submit-btn"
             >
               {submitting ? (
                 <span className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Submitting...
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  Submitting KYC...
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  <Upload className="w-4 h-4" />
-                  Submit KYC
+                  <Upload className="w-5 h-5" />
+                  Submit KYC Verification
                 </span>
               )}
             </Button>
