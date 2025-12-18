@@ -90,11 +90,11 @@ function TreeNodeComponent({
 
   return (
     <div className="flex flex-col items-center">
-      {/* Node Card */}
+      {/* Node Card - Responsive sizing */}
       <div
         onClick={() => onNodeClick(node.referralId)}
         className={cn(
-          "relative px-6 py-4 rounded-xl border-2 min-w-[160px] transition-all hover:scale-105 hover:shadow-lg bg-card z-10 cursor-pointer",
+          "relative px-3 py-2 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl border-2 min-w-[100px] sm:min-w-[160px] transition-all hover:scale-105 hover:shadow-lg bg-card z-10 cursor-pointer",
           isRoot
             ? "border-primary-500 shadow-primary-100"
             : isLeft
@@ -102,10 +102,10 @@ function TreeNodeComponent({
             : "border-purple-400 shadow-purple-100"
         )}
       >
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center gap-0.5 sm:gap-1">
           <div
             className={cn(
-              "w-12 h-12 rounded-full flex items-center justify-center mb-2",
+              "w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-1 sm:mb-2",
               isRoot
                 ? "bg-primary-500"
                 : isLeft
@@ -113,22 +113,26 @@ function TreeNodeComponent({
                 : "bg-purple-400"
             )}
           >
-            <Users className="w-6 h-6 text-white" />
+            <Users className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
           </div>
-          <p className="text-sm font-bold text-foreground text-center">
+          <p className="text-xs sm:text-sm font-bold text-foreground text-center line-clamp-1">
             {node.name}
           </p>
-          <p className="text-xs text-muted-foreground">{node.referralId}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">
+            {node.referralId}
+          </p>
           {node.currentPlan && (
-            <div className="mt-2 px-3 py-1 rounded-full bg-primary-50 border border-primary-200">
-              <p className="text-xs font-medium text-primary-700">
+            <div className="mt-1 sm:mt-2 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-primary-50 border border-primary-200">
+              <p className="text-[10px] sm:text-xs font-medium text-primary-700">
                 {node.currentPlan}
               </p>
             </div>
           )}
           {!node.isActive && (
-            <div className="mt-1 px-2 py-0.5 rounded-full bg-red-50 border border-red-200">
-              <p className="text-xs font-medium text-red-600">Inactive</p>
+            <div className="mt-0.5 sm:mt-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-red-50 border border-red-200">
+              <p className="text-[10px] sm:text-xs font-medium text-red-600">
+                Inactive
+              </p>
             </div>
           )}
         </div>
@@ -138,24 +142,26 @@ function TreeNodeComponent({
       {(node.left || node.right) && (
         <>
           {/* Vertical Line Down */}
-          <div className="w-0.5 h-8 bg-border my-2"></div>
+          <div className="w-0.5 h-4 sm:h-8 bg-border my-1 sm:my-2"></div>
 
           {/* Horizontal Line */}
           <div className="relative w-full">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-0.5 bg-border"></div>
-            <div className="flex justify-around gap-8 pt-2">
+            <div className="flex justify-around gap-2 sm:gap-8 pt-1 sm:pt-2">
               {/* Left Child */}
               <div className="relative">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-8 bg-border"></div>
-                <div className="pt-8">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-4 sm:h-8 bg-border"></div>
+                <div className="pt-4 sm:pt-8">
                   {node.left ? (
                     <TreeNodeComponent
                       node={node.left}
                       onNodeClick={onNodeClick}
                     />
                   ) : (
-                    <div className="px-6 py-4 rounded-xl border-2 border-dashed border-border bg-muted/30 min-w-[160px] flex items-center justify-center">
-                      <p className="text-xs text-muted-foreground">Empty</p>
+                    <div className="px-3 py-2 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl border-2 border-dashed border-border bg-muted/30 min-w-[100px] sm:min-w-[160px] flex items-center justify-center">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">
+                        Empty
+                      </p>
                     </div>
                   )}
                 </div>
@@ -163,16 +169,18 @@ function TreeNodeComponent({
 
               {/* Right Child */}
               <div className="relative">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-8 bg-border"></div>
-                <div className="pt-8">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-4 sm:h-8 bg-border"></div>
+                <div className="pt-4 sm:pt-8">
                   {node.right ? (
                     <TreeNodeComponent
                       node={node.right}
                       onNodeClick={onNodeClick}
                     />
                   ) : (
-                    <div className="px-6 py-4 rounded-xl border-2 border-dashed border-border bg-muted/30 min-w-[160px] flex items-center justify-center">
-                      <p className="text-xs text-muted-foreground">Empty</p>
+                    <div className="px-3 py-2 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl border-2 border-dashed border-border bg-muted/30 min-w-[100px] sm:min-w-[160px] flex items-center justify-center">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">
+                        Empty
+                      </p>
                     </div>
                   )}
                 </div>
@@ -219,62 +227,73 @@ function UserDetailsModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center sm:p-4"
       onClick={onClose}
     >
       <div
-        className="bg-card border border-border rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+        className="bg-card border border-border rounded-t-2xl sm:rounded-2xl max-w-2xl w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-card border-b border-border p-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary-500 flex items-center justify-center">
-              <Users className="w-6 h-6 text-white" />
+        <div className="sticky top-0 bg-card border-b border-border p-4 sm:p-6 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary-500 flex items-center justify-center">
+              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-foreground">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground">
                 User Details
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Complete information
               </p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="w-5 h-5" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 sm:h-10 sm:w-10"
+            onClick={onClose}
+          >
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
         </div>
 
         {/* Content */}
         {loading ? (
-          <div className="p-8 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <div className="p-6 sm:p-8 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary-600"></div>
           </div>
         ) : userDetails ? (
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Basic Info */}
-            <div className="bg-muted/30 rounded-xl p-4 space-y-3">
-              <h3 className="font-semibold text-foreground mb-3">
+            <div className="bg-muted/30 rounded-lg sm:rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3">
+              <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 sm:mb-3">
                 Basic Information
               </h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <p className="text-xs text-muted-foreground">Name</p>
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    Name
+                  </p>
+                  <p className="text-xs sm:text-sm font-medium text-foreground">
                     {userDetails.name}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Username</p>
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    Username
+                  </p>
+                  <p className="text-xs sm:text-sm font-medium text-foreground">
                     {userDetails.username}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Referral ID</p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-primary-600">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    Referral ID
+                  </p>
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <p className="text-xs sm:text-sm font-medium text-primary-600">
                       {userDetails.referralId}
                     </p>
                     <button
@@ -282,19 +301,21 @@ function UserDetailsModal({
                         navigator.clipboard.writeText(userDetails.referralId);
                         toast.success("Referral ID copied!");
                       }}
-                      className="p-1 hover:bg-muted rounded transition-colors"
+                      className="p-0.5 sm:p-1 hover:bg-muted rounded transition-colors"
                       title="Copy Referral ID"
                     >
-                      <Copy className="w-3.5 h-3.5 text-muted-foreground hover:text-primary-600" />
+                      <Copy className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground hover:text-primary-600" />
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <p className="text-xs text-muted-foreground">Status</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    Status
+                  </p>
                   <span
                     className={cn(
-                      "inline-block px-2 py-1 rounded-full text-xs font-medium",
+                      "inline-block px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium",
                       userDetails.isActive
                         ? "bg-green-100 text-green-700"
                         : "bg-red-100 text-red-700"
@@ -307,18 +328,20 @@ function UserDetailsModal({
             </div>
 
             {/* Contact Info */}
-            <div className="bg-muted/30 rounded-xl p-4 space-y-3">
-              <h3 className="font-semibold text-foreground mb-3">
+            <div className="bg-muted/30 rounded-lg sm:rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3">
+              <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 sm:mb-3">
                 Contact Information
               </h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-muted-foreground" />
-                  <p className="text-sm text-foreground">{userDetails.email}</p>
+              <div className="space-y-1.5 sm:space-y-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+                  <p className="text-xs sm:text-sm text-foreground truncate">
+                    {userDetails.email}
+                  </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-muted-foreground" />
-                  <p className="text-sm text-foreground">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+                  <p className="text-xs sm:text-sm text-foreground">
                     {userDetails.mobile}
                   </p>
                 </div>
@@ -327,33 +350,35 @@ function UserDetailsModal({
 
             {/* Sponsor Info */}
             {userDetails.sponsor && (
-              <div className="bg-muted/30 rounded-xl p-4">
-                <h3 className="font-semibold text-foreground mb-3">
-                  Sponsor & Placement Details
+              <div className="bg-muted/30 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 sm:mb-3">
+                  Sponsor & Placement
                 </h3>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4">
                   <div>
-                    <p className="text-xs text-muted-foreground">
-                      Sponsor Name
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">
+                      Sponsor
                     </p>
-                    <p className="text-sm font-medium text-foreground">
+                    <p className="text-xs sm:text-sm font-medium text-foreground truncate">
                       {userDetails.sponsor.name}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Sponsor ID</p>
-                    <p className="text-sm font-medium text-foreground">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">
+                      Sponsor ID
+                    </p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground">
                       {userDetails.sponsor.referralId}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">
-                      Placement Side
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">
+                      Side
                     </p>
                     {userDetails.placement ? (
                       <span
                         className={cn(
-                          "inline-block px-2.5 py-0.5 rounded-md text-xs font-medium border",
+                          "inline-block px-1.5 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-xs font-medium border",
                           userDetails.placement === "LEFT"
                             ? "bg-blue-100 text-blue-800 border-blue-300"
                             : "bg-purple-100 text-purple-800 border-purple-300"
@@ -362,7 +387,9 @@ function UserDetailsModal({
                         {userDetails.placement}
                       </span>
                     ) : (
-                      <p className="text-sm font-medium text-foreground">-</p>
+                      <p className="text-xs sm:text-sm font-medium text-foreground">
+                        -
+                      </p>
                     )}
                   </div>
                 </div>
@@ -371,32 +398,40 @@ function UserDetailsModal({
 
             {/* Plan Info */}
             {userDetails.currentPlan && (
-              <div className="bg-primary-50 border border-primary-200 rounded-xl p-4">
-                <h3 className="font-semibold text-primary-900 mb-3">
+              <div className="bg-primary-50 border border-primary-200 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                <h3 className="text-sm sm:text-base font-semibold text-primary-900 mb-2 sm:mb-3">
                   Current Plan
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4">
                   <div>
-                    <p className="text-xs text-primary-700">Plan Name</p>
-                    <p className="text-sm font-medium text-primary-900">
+                    <p className="text-[10px] sm:text-xs text-primary-700">
+                      Plan Name
+                    </p>
+                    <p className="text-xs sm:text-sm font-medium text-primary-900">
                       {userDetails.currentPlan.name}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-primary-700">Amount</p>
-                    <p className="text-sm font-medium text-primary-900">
+                    <p className="text-[10px] sm:text-xs text-primary-700">
+                      Amount
+                    </p>
+                    <p className="text-xs sm:text-sm font-medium text-primary-900">
                       ₹{userDetails.currentPlan.amount}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-primary-700">PV Value</p>
-                    <p className="text-sm font-medium text-primary-900">
+                    <p className="text-[10px] sm:text-xs text-primary-700">
+                      PV Value
+                    </p>
+                    <p className="text-xs sm:text-sm font-medium text-primary-900">
                       {userDetails.currentPlan.pv} PV
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-primary-700">Daily Capping</p>
-                    <p className="text-sm font-medium text-primary-900">
+                    <p className="text-[10px] sm:text-xs text-primary-700">
+                      Daily Capping
+                    </p>
+                    <p className="text-xs sm:text-sm font-medium text-primary-900">
                       ₹{userDetails.currentPlan.dailyCapping}
                     </p>
                   </div>
@@ -405,27 +440,33 @@ function UserDetailsModal({
             )}
 
             {/* Wallet Info */}
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-              <h3 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
-                <Wallet className="w-4 h-4" />
+            <div className="bg-green-50 border border-green-200 rounded-lg sm:rounded-xl p-3 sm:p-4">
+              <h3 className="text-sm sm:text-base font-semibold text-green-900 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+                <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Wallet Details
               </h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 <div>
-                  <p className="text-xs text-green-700">Balance</p>
-                  <p className="text-lg font-bold text-green-900">
+                  <p className="text-[10px] sm:text-xs text-green-700">
+                    Balance
+                  </p>
+                  <p className="text-sm sm:text-lg font-bold text-green-900">
                     ₹{userDetails.wallet.balance}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-green-700">Total Earnings</p>
-                  <p className="text-lg font-bold text-green-900">
+                  <p className="text-[10px] sm:text-xs text-green-700">
+                    Earnings
+                  </p>
+                  <p className="text-sm sm:text-lg font-bold text-green-900">
                     ₹{userDetails.wallet.totalEarnings}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-green-700">Withdrawals</p>
-                  <p className="text-lg font-bold text-green-900">
+                  <p className="text-[10px] sm:text-xs text-green-700">
+                    Withdrawn
+                  </p>
+                  <p className="text-sm sm:text-lg font-bold text-green-900">
                     ₹{userDetails.wallet.totalWithdrawals}
                   </p>
                 </div>
@@ -434,27 +475,33 @@ function UserDetailsModal({
 
             {/* Income Breakdown */}
             {userDetails.incomeBreakdown && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                <h3 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4" />
+              <div className="bg-amber-50 border border-amber-200 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                <h3 className="text-sm sm:text-base font-semibold text-amber-900 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+                  <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   Income Breakdown
                 </h3>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4">
                   <div>
-                    <p className="text-xs text-amber-700">Referral Income</p>
-                    <p className="text-lg font-bold text-amber-900">
+                    <p className="text-[10px] sm:text-xs text-amber-700">
+                      Referral
+                    </p>
+                    <p className="text-sm sm:text-lg font-bold text-amber-900">
                       ₹{userDetails.incomeBreakdown.REFERRAL_INCOME || 0}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-amber-700">Matching Income</p>
-                    <p className="text-lg font-bold text-amber-900">
+                    <p className="text-[10px] sm:text-xs text-amber-700">
+                      Matching
+                    </p>
+                    <p className="text-sm sm:text-lg font-bold text-amber-900">
                       ₹{userDetails.incomeBreakdown.MATCHING_INCOME || 0}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-amber-700">Level Income</p>
-                    <p className="text-lg font-bold text-amber-900">
+                    <p className="text-[10px] sm:text-xs text-amber-700">
+                      Level
+                    </p>
+                    <p className="text-sm sm:text-lg font-bold text-amber-900">
                       ₹{userDetails.incomeBreakdown.LEVEL_INCOME || 0}
                     </p>
                   </div>
@@ -463,33 +510,41 @@ function UserDetailsModal({
             )}
 
             {/* PV Stats */}
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-              <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
+            <div className="bg-blue-50 border border-blue-200 rounded-lg sm:rounded-xl p-3 sm:p-4">
+              <h3 className="text-sm sm:text-base font-semibold text-blue-900 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+                <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 PV Statistics
               </h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4">
                 <div>
-                  <p className="text-xs text-blue-700">Left PV</p>
-                  <p className="text-lg font-bold text-blue-900">
+                  <p className="text-[10px] sm:text-xs text-blue-700">
+                    Left PV
+                  </p>
+                  <p className="text-sm sm:text-lg font-bold text-blue-900">
                     {userDetails.pv.leftPV}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-blue-700">Right PV</p>
-                  <p className="text-lg font-bold text-blue-900">
+                  <p className="text-[10px] sm:text-xs text-blue-700">
+                    Right PV
+                  </p>
+                  <p className="text-sm sm:text-lg font-bold text-blue-900">
                     {userDetails.pv.rightPV}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-blue-700">Total PV (Lifetime)</p>
-                  <p className="text-lg font-bold text-blue-900">
+                  <p className="text-[10px] sm:text-xs text-blue-700">
+                    Total PV
+                  </p>
+                  <p className="text-sm sm:text-lg font-bold text-blue-900">
                     {userDetails.pv.totalPV}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-blue-700">Daily PV used</p>
-                  <p className="text-lg font-bold text-blue-900">
+                  <p className="text-[10px] sm:text-xs text-blue-700">
+                    Daily Used
+                  </p>
+                  <p className="text-sm sm:text-lg font-bold text-blue-900">
                     {userDetails.pv.dailyPVUsed || 0}
                   </p>
                 </div>
@@ -497,35 +552,43 @@ function UserDetailsModal({
             </div>
 
             {/* Dates */}
-            <div className="bg-muted/30 rounded-xl p-4">
-              <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
+            <div className="bg-muted/30 rounded-lg sm:rounded-xl p-3 sm:p-4">
+              <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Activity
               </h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4">
                 <div>
-                  <p className="text-xs text-muted-foreground">Joined</p>
-                  <p className="text-sm font-medium text-foreground">
-                    {new Date(userDetails.joinedAt).toLocaleString("en-IN", {
-                      timeZone: "Asia/Kolkata",
-                    })}{" "}
-                    IST
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    Joined
+                  </p>
+                  <p className="text-[10px] sm:text-sm font-medium text-foreground">
+                    {new Date(userDetails.joinedAt).toLocaleDateString(
+                      "en-IN",
+                      {
+                        timeZone: "Asia/Kolkata",
+                      }
+                    )}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Last Active</p>
-                  <p className="text-sm font-medium text-foreground">
-                    {new Date(userDetails.lastActive).toLocaleString("en-IN", {
-                      timeZone: "Asia/Kolkata",
-                    })}{" "}
-                    IST
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    Last Active
+                  </p>
+                  <p className="text-[10px] sm:text-sm font-medium text-foreground">
+                    {new Date(userDetails.lastActive).toLocaleDateString(
+                      "en-IN",
+                      {
+                        timeZone: "Asia/Kolkata",
+                      }
+                    )}
                   </p>
                 </div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="p-8 text-center text-muted-foreground">
+          <div className="p-6 sm:p-8 text-center text-sm text-muted-foreground">
             Failed to load user details
           </div>
         )}
@@ -704,37 +767,37 @@ export default function UserBinaryTreePage() {
   return (
     <PageContainer maxWidth="full">
       <PageHeader
-        icon={<Network className="w-6 h-6 text-white" />}
+        icon={<Network className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
         title="Binary Tree View"
-        subtitle="Click on any user to view detailed information"
+        subtitle="Tap on any user to view details"
         action={
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 sm:gap-2">
             <Button
               variant="outline"
               size="icon"
-              className="h-10 w-10 border-border hover:bg-muted"
+              className="h-8 w-8 sm:h-10 sm:w-10 border-border hover:bg-muted"
               onClick={handleZoomIn}
               disabled={zoom >= 3}
             >
-              <ZoomIn className="w-4 h-4" />
+              <ZoomIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Button>
             <Button
               variant="outline"
               size="icon"
-              className="h-10 w-10 border-border hover:bg-muted"
+              className="h-8 w-8 sm:h-10 sm:w-10 border-border hover:bg-muted"
               onClick={handleZoomOut}
               disabled={zoom <= 0.3}
             >
-              <ZoomOut className="w-4 h-4" />
+              <ZoomOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Button>
             <Button
               variant="outline"
               size="icon"
-              className="h-10 w-10 border-border hover:bg-muted"
+              className="h-8 w-8 sm:h-10 sm:w-10 border-border hover:bg-muted"
               onClick={handleResetView}
               title="Reset View"
             >
-              <Maximize className="w-4 h-4" />
+              <Maximize className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Button>
           </div>
         }
@@ -744,7 +807,7 @@ export default function UserBinaryTreePage() {
       <div
         id="tree-container"
         className={cn(
-          "bg-muted/30 border border-border rounded-2xl overflow-hidden min-h-[600px] flex flex-col items-center justify-center relative select-none",
+          "bg-muted/30 border border-border rounded-xl sm:rounded-2xl overflow-hidden min-h-[400px] sm:min-h-[600px] flex flex-col items-center justify-center relative select-none touch-none",
           isSpacePressed ? "cursor-grab" : "cursor-default",
           isPanning ? "cursor-grabbing" : ""
         )}
@@ -753,6 +816,24 @@ export default function UserBinaryTreePage() {
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onContextMenu={handleContextMenu}
+        onTouchStart={(e) => {
+          if (e.touches.length === 1) {
+            setIsPanning(true);
+            setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+            setDragOffset(pan);
+          }
+        }}
+        onTouchMove={(e) => {
+          if (isPanning && e.touches.length === 1) {
+            const deltaX = e.touches[0].clientX - dragStart.x;
+            const deltaY = e.touches[0].clientY - dragStart.y;
+            setPan({
+              x: dragOffset.x + deltaX,
+              y: dragOffset.y + deltaY,
+            });
+          }
+        }}
+        onTouchEnd={() => setIsPanning(false)}
       >
         {/* Background Grid Pattern */}
         <div
@@ -765,15 +846,18 @@ export default function UserBinaryTreePage() {
         />
 
         {/* Zoom Level Indicator */}
-        <div className="absolute top-4 left-4 bg-card border border-border rounded-lg px-3 py-1 text-sm font-medium text-foreground z-20">
+        <div className="absolute top-2 left-2 sm:top-4 sm:left-4 bg-card border border-border rounded-md sm:rounded-lg px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium text-foreground z-20">
           {Math.round(zoom * 100)}%
         </div>
 
         {/* Pan Mode Indicator */}
         {isSpacePressed && (
-          <div className="absolute top-4 right-4 bg-primary-500 text-white rounded-lg px-3 py-1 text-sm font-medium z-20 flex items-center gap-2">
+          <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-primary-500 text-white rounded-md sm:rounded-lg px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium z-20 flex items-center gap-1 sm:gap-2">
             <span>🖐️</span>
-            Pan Mode - Hold Space & Drag
+            <span className="hidden sm:inline">
+              Pan Mode - Hold Space & Drag
+            </span>
+            <span className="sm:hidden">Pan</span>
           </div>
         )}
 
@@ -793,27 +877,33 @@ export default function UserBinaryTreePage() {
       </div>
 
       {/* Legend & Controls */}
-      <div className="mt-6 bg-card border border-border rounded-xl p-4 shadow-sm">
-        <div className="flex flex-wrap gap-6 items-center justify-between">
-          <div className="flex flex-wrap gap-6 items-center">
-            <span className="text-sm font-semibold text-foreground mr-2">
+      <div className="mt-4 sm:mt-6 bg-card border border-border rounded-xl p-3 sm:p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-3 sm:gap-6 items-center">
+            <span className="text-xs sm:text-sm font-semibold text-foreground">
               Legend:
             </span>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-primary-500"></div>
-              <span className="text-sm text-muted-foreground">You (Root)</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-primary-500"></div>
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                You
+              </span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-blue-400"></div>
-              <span className="text-sm text-muted-foreground">Left Team</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-blue-400"></div>
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                Left
+              </span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-purple-400"></div>
-              <span className="text-sm text-muted-foreground">Right Team</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-purple-400"></div>
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                Right
+              </span>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+          <div className="hidden sm:flex flex-wrap gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <span>💡</span>
               <span>Click nodes for details</span>
@@ -826,11 +916,12 @@ export default function UserBinaryTreePage() {
               <span>🔍</span>
               <span>Ctrl+scroll to zoom</span>
             </div>
-            <div className="flex items-center gap-1">
-              <span>📜</span>
-              <span>Scroll to navigate vertically</span>
-            </div>
           </div>
+
+          {/* Mobile hint */}
+          <p className="sm:hidden text-[10px] text-muted-foreground text-center">
+            💡 Tap nodes for details • Pinch to zoom • Drag to pan
+          </p>
         </div>
       </div>
 
