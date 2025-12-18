@@ -354,44 +354,6 @@ export default function NewMemberPage() {
           </CardContent>
         </Card>
 
-        {/* 3. Plan Selection */}
-        <Card className="border-border shadow-sm">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <CreditCard className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Plan Selection</CardTitle>
-                <CardDescription>Choose a starting package (optional)</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 md:w-1/2">
-              <Label>Select Package</Label>
-              <Select
-                value={formData.planId}
-                onValueChange={(value) => setFormData({ ...formData, planId: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="No plan (can be assigned later)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="no-plan">No Plan</SelectItem>
-                  {plans.map((plan) => (
-                    <SelectItem key={plan.id} value={plan.id}>
-                      {plan.name} - ₹{plan.amount}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                You can assign a plan now or later via Topup.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* 4. Sponsor & Placement (MOVED TO BOTTOM) */}
         <Card className="border-border shadow-sm bg-muted/10">

@@ -19,12 +19,10 @@ function RegisterPageContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [verifyingReferral, setVerifyingReferral] = useState(false);
-  const [plans, setPlans] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     referralId: "",
     referralName: "",
     placement: "", // No default - user must select
-    planId: "", // Plan selection - mandatory
     name: "",
     mobile: "",
     email: "",
@@ -48,21 +46,6 @@ function RegisterPageContent() {
     setFormData({ ...formData, [e.target.id]: e.target.value });
     setError("");
   };
-
-  // Fetch plans on component mount
-  useEffect(() => {
-    const fetchPlans = async () => {
-      try {
-        const response = await axiosInstance.get("/api/plans");
-        if (response.data.success) {
-          setPlans(response.data.data.filter((p: any) => p.isActive));
-        }
-      } catch (error) {
-        console.error("Error fetching plans:", error);
-      }
-    };
-    fetchPlans();
-  }, []);
 
   // Verify referral ID and fetch referrer details
   const verifyReferralId = async (referralId: string) => {
@@ -127,16 +110,9 @@ function RegisterPageContent() {
         return;
       }
 
-      // Plan selection is required
-      if (!formData.planId) {
-        setError("Please select a plan to join");
-        return;
-      }
-
       payload.referralId = formData.referralId;
       payload.referralName = formData.referralName || "";
       payload.placement = formData.placement;
-      payload.planId = formData.planId;
 
       // Use custom register endpoint (best method - handles all MLM logic)
       const response = await axiosInstance.post("/api/auth/register", payload);
@@ -400,37 +376,6 @@ function RegisterPageContent() {
               </div>
             )}
 
-            {/* Plan Selection - Always visible */}
-            <div className="space-y-1">
-              <Label
-                htmlFor="planId"
-                className="text-gray-700 text-sm font-medium"
-              >
-                Select Plan <span className="text-red-500">*</span>
-              </Label>
-              <div className="relative">
-                <select
-                  id="planId"
-                  value={formData.planId}
-                  onChange={handleChange}
-                  className="h-10 lg:h-11 w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-xl px-4 pr-10 focus:border-primary-400 focus:ring-2 focus:ring-primary-400/20 focus:outline-none appearance-none text-sm"
-                  disabled={loading}
-                  required
-                >
-                  <option value="">Choose your plan</option>
-                  {plans.map((plan) => (
-                    <option key={plan.id} value={plan.id}>
-                      {plan.name} - ₹{plan.amount} (PV: {plan.pv})
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Select a plan to activate your account and start earning
-              </p>
-            </div>
-
             {/* Name */}
             <div className="space-y-1">
               <Label
@@ -590,11 +535,13 @@ function RegisterPageContent() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        </div>
+      }
+    >
       <RegisterPageContent />
     </Suspense>
   );
