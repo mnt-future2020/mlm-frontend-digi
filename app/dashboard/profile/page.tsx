@@ -232,7 +232,7 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="p-3 bg-blue-50 rounded-lg text-center">
                 <p className="text-xs text-blue-600 mb-1">Plan</p>
-                <p className="font-bold text-blue-900 text-sm truncate">{profile?.currentPlanName || "None"}</p>
+                <p className="font-bold text-blue-900 text-sm truncate">{profile?.currentPlan || "None"}</p>
               </div>
               <div className="p-3 bg-green-50 rounded-lg text-center">
                 <p className="text-xs text-green-600 mb-1">Total Team</p>

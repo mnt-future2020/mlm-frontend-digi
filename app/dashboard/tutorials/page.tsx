@@ -87,9 +87,9 @@ export default function TutorialsPage() {
             {/* Header / Top Bar */}
             <div className="flex items-center gap-4 p-4 border-b bg-white dark:bg-slate-950">
                 <div className="flex items-center gap-2 text-primary font-bold text-xl mr-8">
-                    <div className="p-2 bg-red-600 rounded-lg text-white">
-                        <MonitorPlay className="w-5 h-5" />
-                    </div>
+                        {/* <div className="p-2 bg-yellow-400 rounded-lg text-white">
+                            <MonitorPlay className="w-5 h-5" />
+                        </div> */}
                     <span>Tutorials</span>
                 </div>
 
