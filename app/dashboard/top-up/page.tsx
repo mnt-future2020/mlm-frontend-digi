@@ -32,13 +32,15 @@ export default function TopUpPage() {
     const fetchData = async () => {
       try {
         // Fetch plans
-        const plansResponse = await axiosInstance.get('/api/plans');
+        const plansResponse = await axiosInstance.get("/api/plans");
         if (plansResponse.data.success) {
           setPlans(plansResponse.data.data || []);
         }
 
         // Fetch fresh user data from dashboard API (not from JWT token)
-        const dashboardResponse = await axiosInstance.get('/api/user/dashboard');
+        const dashboardResponse = await axiosInstance.get(
+          "/api/user/dashboard"
+        );
         if (dashboardResponse.data.success) {
           const dashboardData = dashboardResponse.data.data;
           // Set current plan from fresh database data
@@ -46,9 +48,12 @@ export default function TopUpPage() {
             setCurrentPlan(dashboardData.currentPlan.name);
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching data:", error);
-        toast.error("Failed to load data");
+        // Don't show error toast for inactive users - they can still see plans
+        if (error.response?.status !== 400) {
+          toast.error("Failed to load plans");
+        }
       } finally {
         setLoading(false);
       }
@@ -69,14 +74,16 @@ export default function TopUpPage() {
 
     try {
       setSubmitting(true);
-      const response = await axiosInstance.post('/api/topup/request', {
+      const response = await axiosInstance.post("/api/topup/request", {
         planId: selectedPlan,
         paymentMethod: "Direct Request",
-        transactionDetails: "User requested upgrade via simplified flow"
+        transactionDetails: "User requested upgrade via simplified flow",
       });
 
       if (response.data.success) {
-        toast.success("Plan upgrade request sent successfully! Waiting for admin approval.");
+        toast.success(
+          "Plan upgrade request sent successfully! Waiting for admin approval."
+        );
         setSelectedPlan("");
       }
     } catch (error: any) {
@@ -110,20 +117,38 @@ export default function TopUpPage() {
       />
 
       {/* Current Plan Display */}
-      {currentPlan && (
+      {currentPlan ? (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8 flex justify-between items-center">
           <div>
-            <h3 className="text-sm font-semibold text-blue-900 mb-1">Current Active Plan</h3>
+            <h3 className="text-sm font-semibold text-blue-900 mb-1">
+              Current Active Plan
+            </h3>
             <p className="text-2xl font-bold text-blue-700">{currentPlan}</p>
           </div>
           <div className="bg-blue-100 p-3 rounded-full">
             <Check className="w-6 h-6 text-blue-600" />
           </div>
         </div>
+      ) : (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8 flex justify-between items-center">
+          <div>
+            <h3 className="text-sm font-semibold text-amber-900 mb-1">
+              No Active Plan
+            </h3>
+            <p className="text-lg text-amber-700">
+              You don&apos;t have a plan yet. Select one below to get started!
+            </p>
+          </div>
+          <div className="bg-amber-100 p-3 rounded-full">
+            <Zap className="w-6 h-6 text-amber-600" />
+          </div>
+        </div>
       )}
 
       {/* Plan Cards */}
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">Select New Plan</h3>
+      <h3 className="text-lg font-semibold text-gray-800 mb-4">
+        Select New Plan
+      </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {plans.map((plan, index) => {
           const isCurrentPlan = currentPlan === plan.name;
@@ -138,8 +163,8 @@ export default function TopUpPage() {
                 isCurrentPlan
                   ? "border-green-500 bg-green-50 cursor-not-allowed opacity-70"
                   : selectedPlan === plan.id
-                    ? "border-primary-500 bg-primary-50 ring-2 ring-primary-200"
-                    : "border-border bg-card hover:border-primary-200"
+                  ? "border-primary-500 bg-primary-50 ring-2 ring-primary-200"
+                  : "border-border bg-card hover:border-primary-200"
               )}
             >
               <div>
@@ -152,23 +177,35 @@ export default function TopUpPage() {
                   <h3 className="text-lg font-bold text-foreground group-hover:text-primary-600 transition-colors">
                     {plan.name}
                   </h3>
-                  {selectedPlan === plan.id && !isCurrentPlan && <div className="bg-primary-500 rounded-full p-1"><Check className="w-4 h-4 text-white" /></div>}
+                  {selectedPlan === plan.id && !isCurrentPlan && (
+                    <div className="bg-primary-500 rounded-full p-1">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                  )}
                 </div>
 
-                <p className="text-4xl font-extrabold text-primary-600 mb-4">₹{plan.amount?.toLocaleString()}</p>
+                <p className="text-4xl font-extrabold text-primary-600 mb-4">
+                  ₹{plan.amount?.toLocaleString()}
+                </p>
 
                 <div className="space-y-2 text-sm text-gray-600 bg-white/50 p-3 rounded-lg border border-gray-100">
                   <div className="flex justify-between">
                     <span>PV Points:</span>
-                    <span className="font-semibold text-gray-900">{plan.pv}</span>
+                    <span className="font-semibold text-gray-900">
+                      {plan.pv}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Ref Income:</span>
-                    <span className="font-semibold text-gray-900">₹{plan.referralIncome}</span>
+                    <span className="font-semibold text-gray-900">
+                      ₹{plan.referralIncome}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Daily Cap:</span>
-                    <span className="font-semibold text-gray-900">₹{plan.dailyCapping}</span>
+                    <span className="font-semibold text-gray-900">
+                      ₹{plan.dailyCapping}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -183,7 +220,9 @@ export default function TopUpPage() {
           <div className="max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-center sm:text-left">
               <p className="text-sm text-gray-500">Selected Plan upgrade to</p>
-              <p className="text-xl font-bold text-primary-600">{plans.find(p => p.id === selectedPlan)?.name}</p>
+              <p className="text-xl font-bold text-primary-600">
+                {plans.find((p) => p.id === selectedPlan)?.name}
+              </p>
             </div>
 
             <div className="flex gap-3 w-full sm:w-auto">
@@ -219,7 +258,6 @@ export default function TopUpPage() {
 
       {/* Spacer for fixed bottom bar */}
       {selectedPlan && <div className="h-24"></div>}
-
     </PageContainer>
   );
 }
