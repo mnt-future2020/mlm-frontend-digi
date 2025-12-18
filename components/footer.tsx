@@ -1,8 +1,41 @@
+"use client";
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
 import Image from "next/image";
+import { useState, useEffect } from "react";
+import { axiosInstance } from "@/lib/api";
+
+interface Settings {
+  companyName?: string;
+  companyEmail?: string;
+  companyPhone?: string;
+  companyAddress?: string;
+  companyDescription?: string;
+  supportEmail?: string;
+  supportPhone?: string;
+  address?: string;
+  facebookUrl?: string;
+  twitterUrl?: string;
+  instagramUrl?: string;
+  linkedinUrl?: string;
+}
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [settings, setSettings] = useState<Settings>({});
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await axiosInstance.get("/api/settings/public");
+        if (response.data.success) {
+          setSettings(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const footerLinks = [
     {
@@ -53,34 +86,34 @@ export default function Footer() {
             <div className="flex items-center gap-3 mb-4">
               <Image 
                 src="/assets/images/logo/vsv-unite.png" 
-                alt="VSV Unite Logo" 
+                alt={`${settings.companyName || 'VSV Unite'} Logo`}
                 width={56} 
                 height={56}
                 className="w-14 h-14 object-contain"
               />
-              <span className="text-2xl font-bold text-foreground">VSV Unite</span>
+              <span className="text-2xl font-bold text-foreground">{settings.companyName || 'VSV Unite'}</span>
             </div>
             <p className="text-muted-foreground mb-6 max-w-sm">
-              Building transparent and automated network income opportunities for thousands of successful members worldwide.
+              {settings.companyDescription || 'Building transparent and automated network income opportunities for thousands of successful members worldwide.'}
             </p>
             
             {/* Contact Info */}
             <div className="space-y-3 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Mail className="w-4 h-4 text-primary-500" />
-                <a href="mailto:support@vsvunite.com" className="hover:text-primary-600 transition-colors">
-                  support@vsvunite.com
+                <a href={`mailto:${settings.companyEmail || settings.supportEmail || 'support@vsvunite.com'}`} className="hover:text-primary-600 transition-colors">
+                  {settings.companyEmail || settings.supportEmail || 'support@vsvunite.com'}
                 </a>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Phone className="w-4 h-4 text-primary-500" />
-                <a href="tel:+911234567890" className="hover:text-primary-600 transition-colors">
-                  +91 123 456 7890
+                <a href={`tel:${(settings.companyPhone || settings.supportPhone || '+911234567890').replace(/\s/g, '')}`} className="hover:text-primary-600 transition-colors">
+                  {settings.companyPhone || settings.supportPhone || '+91 123 456 7890'}
                 </a>
               </div>
               <div className="flex items-start gap-2 text-muted-foreground">
                 <MapPin className="w-4 h-4 text-primary-500 mt-0.5" />
-                <span>Mumbai, Maharashtra, India</span>
+                <span>{settings.companyAddress || settings.address || 'Mumbai, Maharashtra, India'}</span>
               </div>
             </div>
           </div>
@@ -112,13 +145,13 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           {/* Copyright */}
           <p className="text-sm text-muted-foreground text-center md:text-left">
-            © {currentYear} VSV Unite. All rights reserved.
+            © {currentYear} {settings.companyName || 'VSV Unite'}. All rights reserved.
           </p>
 
           {/* Social Links */}
           <div className="flex items-center gap-4">
             <a
-              href="#"
+              href={settings.facebookUrl || '#'}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Facebook"
@@ -127,7 +160,7 @@ export default function Footer() {
               <Facebook className="w-4 h-4" />
             </a>
             <a
-              href="#"
+              href={settings.twitterUrl || '#'}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Twitter"
@@ -136,7 +169,7 @@ export default function Footer() {
               <Twitter className="w-4 h-4" />
             </a>
             <a
-              href="#"
+              href={settings.instagramUrl || '#'}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
@@ -145,7 +178,7 @@ export default function Footer() {
               <Instagram className="w-4 h-4" />
             </a>
             <a
-              href="#"
+              href={settings.linkedinUrl || '#'}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="LinkedIn"

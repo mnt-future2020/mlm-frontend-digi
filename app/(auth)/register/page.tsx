@@ -171,15 +171,13 @@ function RegisterPageContent() {
             transition={{ duration: 0.5 }}
           >
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-white shadow-lg flex items-center justify-center p-2">
-                <Image
-                  src="/assets/images/logo/vsv-unite.png"
-                  alt="VSV Unite Logo"
-                  width={80}
-                  height={80}
-                  className="w-full h-full object-contain"
-                />
-              </div>
+              <Image
+                src="/assets/images/logo/vsv.webp"
+                alt="VSV Unite Logo"
+                width={80}
+                height={80}
+                className="w-16 h-16 lg:w-20 lg:h-20 object-contain"
+              />
               <span className="text-xl lg:text-2xl font-bold text-white">
                 VSV Unite
               </span>
@@ -261,15 +259,13 @@ function RegisterPageContent() {
           {/* Mobile Logo */}
           <div className="md:hidden flex justify-center mb-4">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center p-2 border-2 border-primary-100">
-                <Image
-                  src="/assets/images/logo/vsv-unite.png"
-                  alt="VSV Unite Logo"
-                  width={64}
-                  height={64}
-                  className="w-full h-full object-contain"
-                />
-              </div>
+              <Image
+                src="/assets/images/logo/vsv.webp"
+                alt="VSV Unite Logo"
+                width={80}
+                height={80}
+                className="w-20 h-20 object-contain"
+              />
               <span className="text-2xl font-bold text-gray-900">
                 VSV Unite
               </span>

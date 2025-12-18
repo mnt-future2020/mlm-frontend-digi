@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,44 +19,130 @@ import {
   CheckCircle2,
   Sparkles,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
 import Image from "next/image";
+import { axiosInstance } from "@/lib/api";
+
+interface Settings {
+  companyName?: string;
+  companyEmail?: string;
+  companyPhone?: string;
+  companyAddress?: string;
+  companyDescription?: string;
+  supportEmail?: string;
+  supportPhone?: string;
+  whatsappNumber?: string;
+  address?: string;
+  supportHours?: string;
+  responseTime?: string;
+}
 
 export default function ContactPage() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [result, setResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
+  const [settings, setSettings] = useState<Settings>({});
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await axiosInstance.get("/api/settings/public");
+        if (response.data.success) {
+          setSettings(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setResult(null);
+
+    const formData = new FormData(event.currentTarget);
+    formData.append("access_key", "687f8c9f-f4e3-4bd4-8068-ede4b3cebbe7");
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setResult({
+          success: true,
+          message: "Thank you! Your message has been sent successfully.",
+        });
+        (event.target as HTMLFormElement).reset();
+      } else {
+        setResult({
+          success: false,
+          message: "Something went wrong. Please try again.",
+        });
+      }
+    } catch {
+      setResult({
+        success: false,
+        message: "Failed to send message. Please try again later.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  // Use companyEmail/companyPhone/companyAddress from API, fallback to supportEmail etc.
+  const email = settings.companyEmail || settings.supportEmail || "support@vsvunite.com";
+  const phone = settings.companyPhone || settings.supportPhone || "+91 XXXXX XXXXX";
+  const address = settings.companyAddress || settings.address || "Mumbai, Maharashtra";
+  const whatsapp = settings.whatsappNumber || phone;
+
   const contactInfo = [
     {
       icon: Mail,
       title: "Email Us",
-      value: "support@vsvunite.com",
-      description: "We'll respond within 24 hours",
-      href: "mailto:support@vsvunite.com",
+      value: email,
+      description: `We'll respond within ${settings.responseTime || "24 hours"}`,
+      href: `mailto:${email}`,
     },
     {
       icon: Phone,
       title: "Call Us",
-      value: "+91 XXXXX XXXXX",
-      description: "Mon-Sat, 10 AM - 6 PM",
-      href: "tel:+91XXXXXXXXXX",
+      value: phone,
+      description: settings.supportHours || "Mon-Sat, 10 AM - 6 PM",
+      href: `tel:${phone.replace(/\s/g, "")}`,
     },
     {
       icon: MessageSquare,
       title: "WhatsApp",
-      value: "+91 XXXXX XXXXX",
+      value: whatsapp,
       description: "Quick responses on WhatsApp",
-      href: "https://wa.me/91XXXXXXXXXX",
+      href: `https://wa.me/${whatsapp.replace(/[^0-9]/g, "")}`,
     },
     {
       icon: MapPin,
       title: "Office Address",
-      value: "Mumbai, Maharashtra",
+      value: address,
       description: "India",
       href: "#",
     },
   ];
 
   const supportFeatures = [
-    { icon: Clock, text: "Response within 24 hours" },
-    { icon: Headphones, text: "Mon-Sat, 10 AM - 6 PM" },
+    {
+      icon: Clock,
+      text: `Response within ${settings.responseTime || "24 hours"}`,
+    },
+    {
+      icon: Headphones,
+      text: settings.supportHours || "Mon-Sat, 10 AM - 6 PM",
+    },
     { icon: Globe, text: "Support in English" },
   ];
 
@@ -94,17 +181,21 @@ export default function ContactPage() {
                 We&apos;re Here to Help
               </Badge>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-                Get in Touch{" "}
-                <span className="text-primary">With Us</span>
+                Get in Touch <span className="text-primary">With Us</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-xl mb-8">
-                Have questions about VSV Unite? We&apos;re here to help and answer any questions you might have. We look forward to hearing from you!
+                Have questions about VSV Unite? We&apos;re here to help and
+                answer any questions you might have. We look forward to hearing
+                from you!
               </p>
 
               {/* Support Features */}
               <div className="flex flex-wrap gap-6">
                 {supportFeatures.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2 text-muted-foreground">
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 text-muted-foreground"
+                  >
                     <feature.icon className="w-5 h-5 text-primary" />
                     <span className="text-sm">{feature.text}</span>
                   </div>
@@ -130,19 +221,23 @@ export default function ContactPage() {
               <Card className="border-0 shadow-2xl shadow-primary/5">
                 <CardContent className="p-8 lg:p-10">
                   <div className="mb-8">
-                    <h2 className="text-2xl font-bold mb-2">Send Us a Message</h2>
+                    <h2 className="text-2xl font-bold mb-2">
+                      Send Us a Message
+                    </h2>
                     <p className="text-muted-foreground">
-                      Fill out the form below and we&apos;ll get back to you as soon as possible.
+                      Fill out the form below and we&apos;ll get back to you as
+                      soon as possible.
                     </p>
                   </div>
 
-                  <form className="space-y-6">
+                  <form className="space-y-6" onSubmit={onSubmit}>
                     {/* Name Fields */}
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="fullName">Full Name *</Label>
                         <Input
                           id="fullName"
+                          name="name"
                           placeholder="Enter your full name"
                           className="h-12"
                           required
@@ -152,6 +247,7 @@ export default function ContactPage() {
                         <Label htmlFor="phone">Phone Number *</Label>
                         <Input
                           id="phone"
+                          name="phone"
                           type="tel"
                           placeholder="+91 XXXXX XXXXX"
                           className="h-12"
@@ -165,6 +261,7 @@ export default function ContactPage() {
                       <Label htmlFor="email">Email Address *</Label>
                       <Input
                         id="email"
+                        name="email"
                         type="email"
                         placeholder="your@email.com"
                         className="h-12"
@@ -177,6 +274,7 @@ export default function ContactPage() {
                       <Label htmlFor="subject">Subject</Label>
                       <Input
                         id="subject"
+                        name="subject"
                         placeholder="How can we help you?"
                         className="h-12"
                       />
@@ -187,16 +285,33 @@ export default function ContactPage() {
                       <Label htmlFor="message">Message *</Label>
                       <Textarea
                         id="message"
+                        name="message"
                         placeholder="Write your message here..."
                         className="min-h-[150px] resize-none"
                         required
                       />
                     </div>
 
+                    {/* Result Message */}
+                    {result && (
+                      <div className={`p-4 rounded-lg ${result.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                        {result.message}
+                      </div>
+                    )}
+
                     {/* Submit Button */}
-                    <Button size="lg" className="w-full h-12 gap-2 text-base">
-                      <Send className="w-5 h-5" />
-                      Submit Request
+                    <Button size="lg" className="w-full h-12 gap-2 text-base" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-5 h-5" />
+                          Submit Request
+                        </>
+                      )}
                     </Button>
                   </form>
                 </CardContent>
@@ -231,8 +346,12 @@ export default function ContactPage() {
                         <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
                           {info.title}
                         </h3>
-                        <p className="text-foreground font-medium">{info.value}</p>
-                        <p className="text-sm text-muted-foreground">{info.description}</p>
+                        <p className="text-foreground font-medium">
+                          {info.value}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {info.description}
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
@@ -248,12 +367,20 @@ export default function ContactPage() {
                   </h3>
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Response Time</span>
-                      <span className="font-medium">Within 24 hours</span>
+                      <span className="text-muted-foreground">
+                        Response Time
+                      </span>
+                      <span className="font-medium">
+                        Within {settings.responseTime || "24 hours"}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Support Hours</span>
-                      <span className="font-medium">Mon-Sat, 10 AM - 6 PM</span>
+                      <span className="text-muted-foreground">
+                        Support Hours
+                      </span>
+                      <span className="font-medium">
+                        {settings.supportHours || "Mon-Sat, 10 AM - 6 PM"}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Languages</span>
@@ -277,7 +404,9 @@ export default function ContactPage() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <Badge className="mb-4 bg-primary text-primary-foreground">Quick Help</Badge>
+            <Badge className="mb-4 bg-primary text-primary-foreground">
+              Quick Help
+            </Badge>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Frequently Asked Questions
             </h2>
@@ -288,10 +417,22 @@ export default function ContactPage() {
 
           <div className="grid md:grid-cols-2 gap-6">
             {[
-              { q: "How do I get started?", a: "Register your account, activate a membership plan, and start building your team." },
-              { q: "What is the minimum withdrawal?", a: "The minimum withdrawal amount varies by plan. Check your dashboard for details." },
-              { q: "How does PV matching work?", a: "Income is calculated based on matching Point Values from your left and right teams." },
-              { q: "Can I upgrade my plan?", a: "Yes, you can upgrade your plan anytime from your dashboard." },
+              {
+                q: "How do I get started?",
+                a: "Register your account, activate a membership plan, and start building your team.",
+              },
+              {
+                q: "What is the minimum withdrawal?",
+                a: "The minimum withdrawal amount varies by plan. Check your dashboard for details.",
+              },
+              {
+                q: "How does PV matching work?",
+                a: "Income is calculated based on matching Point Values from your left and right teams.",
+              },
+              {
+                q: "Can I upgrade my plan?",
+                a: "Yes, you can upgrade your plan anytime from your dashboard.",
+              },
             ].map((faq, index) => (
               <motion.div
                 key={index}
@@ -334,7 +475,7 @@ export default function ContactPage() {
       <section className="py-8 md:py-10 px-6 relative overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-600 to-primary-700" />
-        
+
         {/* Decorative Elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary-400/20 rounded-full blur-3xl" />
@@ -352,10 +493,14 @@ export default function ContactPage() {
               Ready to Start Your Journey?
             </h2>
             <p className="text-lg text-white/90 mb-6 max-w-2xl mx-auto">
-              Join thousands of successful members building their financial future with VSV Unite.
+              Join thousands of successful members building their financial
+              future with VSV Unite.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-white text-primary hover:bg-white/90 gap-2">
+              <Button
+                size="lg"
+                className="bg-white text-primary hover:bg-white/90 gap-2"
+              >
                 Get Started Now
                 <ArrowRight className="w-5 h-5" />
               </Button>

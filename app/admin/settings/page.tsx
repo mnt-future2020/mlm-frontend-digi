@@ -169,6 +169,12 @@ export default function SettingsPage() {
   };
 
   const handleSave = async () => {
+    // Ranks tab has its own save button, so skip here
+    if (activeTab === "ranks") {
+      toast.info("Use the 'Save Ranks' button below to save rank changes.");
+      return;
+    }
+
     setSaving(true);
     try {
       let response;

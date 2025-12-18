@@ -34,40 +34,43 @@ export default function LoginPage() {
 
     try {
       // Check if input is email or referral ID
-      const isEmail = formData.identifier.includes('@');
+      const isEmail = formData.identifier.includes("@");
       let response;
-      
+
       if (isEmail) {
         // Use Better Auth's email sign-in endpoint
-        response = await axiosInstance.post('/api/auth/sign-in/email', {
+        response = await axiosInstance.post("/api/auth/sign-in/email", {
           email: formData.identifier,
-          password: formData.password
+          password: formData.password,
         });
       } else {
         // Input is referral ID - need to get username first
         // Find user by referral ID
-        const userLookup = await axiosInstance.post('/api/auth/lookup-referral', {
-          referralId: formData.identifier
-        });
-        
+        const userLookup = await axiosInstance.post(
+          "/api/auth/lookup-referral",
+          {
+            referralId: formData.identifier,
+          }
+        );
+
         if (!userLookup.data.success) {
-          setError('Invalid referral ID');
+          setError("Invalid referral ID");
           setLoading(false);
           return;
         }
-        
+
         const { username, email } = userLookup.data.data;
-        
+
         // Use Better Auth's sign-in endpoint based on what user has
         if (email) {
-          response = await axiosInstance.post('/api/auth/sign-in/email', {
+          response = await axiosInstance.post("/api/auth/sign-in/email", {
             email: email,
-            password: formData.password
+            password: formData.password,
           });
         } else {
-          response = await axiosInstance.post('/api/auth/sign-in/username', {
+          response = await axiosInstance.post("/api/auth/sign-in/username", {
             username: username,
-            password: formData.password
+            password: formData.password,
           });
         }
       }
@@ -76,10 +79,10 @@ export default function LoginPage() {
       if (response.data.user && response.data.token) {
         const userData = response.data.user;
         const token = response.data.token;
-        
+
         // Save token and user to auth context (which saves to localStorage)
         login(userData, token);
-        
+
         // Redirect based on role
         if (userData.role === "admin") {
           router.push("/admin/dashboard");
@@ -90,7 +93,9 @@ export default function LoginPage() {
         setError("Login failed - Invalid response");
       }
     } catch (err: any) {
-      setError(err?.response?.data?.message || "An error occurred. Please try again.");
+      setError(
+        err?.response?.data?.message || "An error occurred. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -101,13 +106,16 @@ export default function LoginPage() {
       {/* Left Side - Image/Branding */}
       <div className="hidden md:flex md:w-1/2 relative overflow-hidden">
         {/* Background Image */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?q=80&w=2071')" }}
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?q=80&w=2071')",
+          }}
         />
         {/* Gradient Overlay with Primary Color */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary-400/90 via-primary-600/80 to-black/70" />
-        
+
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-8 lg:p-12 w-full">
           {/* Logo */}
@@ -117,19 +125,19 @@ export default function LoginPage() {
             transition={{ duration: 0.5 }}
           >
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-white shadow-lg flex items-center justify-center p-2">
-                <Image 
-                  src="/assets/images/logo/vsv-unite.png" 
-                  alt="VSV Unite Logo" 
-                  width={80} 
-                  height={80}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <span className="text-xl lg:text-2xl font-bold text-white">VSV Unite</span>
+              <Image
+                src="/assets/images/logo/vsv.jpeg"
+                alt="VSV Unite Logo"
+                width={80}
+                height={80}
+                className="w-20 h-20 lg:w-24 lg:h-24 object-contain"
+              />
+              <span className="text-xl lg:text-2xl font-bold text-white">
+                VSV Unite
+              </span>
             </Link>
           </motion.div>
-          
+
           {/* Main Content */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -141,10 +149,11 @@ export default function LoginPage() {
               Welcome Back to Your Financial Journey
             </h1>
             <p className="text-white/80 text-base lg:text-lg">
-              Access your dashboard, track your investments, and continue building your wealth with VSV.
+              Access your dashboard, track your investments, and continue
+              building your wealth with VSV.
             </p>
           </motion.div>
-          
+
           {/* Stats */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -153,16 +162,28 @@ export default function LoginPage() {
             className="flex gap-6 lg:gap-12"
           >
             <div>
-              <div className="text-2xl lg:text-4xl font-bold text-white">10K+</div>
-              <div className="text-white/60 text-xs lg:text-sm">Active Members</div>
+              <div className="text-2xl lg:text-4xl font-bold text-white">
+                10K+
+              </div>
+              <div className="text-white/60 text-xs lg:text-sm">
+                Active Members
+              </div>
             </div>
             <div>
-              <div className="text-2xl lg:text-4xl font-bold text-white">₹50Cr+</div>
-              <div className="text-white/60 text-xs lg:text-sm">Total Invested</div>
+              <div className="text-2xl lg:text-4xl font-bold text-white">
+                ₹50Cr+
+              </div>
+              <div className="text-white/60 text-xs lg:text-sm">
+                Total Invested
+              </div>
             </div>
             <div>
-              <div className="text-2xl lg:text-4xl font-bold text-white">99%</div>
-              <div className="text-white/60 text-xs lg:text-sm">Satisfaction</div>
+              <div className="text-2xl lg:text-4xl font-bold text-white">
+                99%
+              </div>
+              <div className="text-white/60 text-xs lg:text-sm">
+                Satisfaction
+              </div>
             </div>
           </motion.div>
         </div>
@@ -179,25 +200,30 @@ export default function LoginPage() {
           {/* Mobile Logo */}
           <div className="md:hidden flex justify-center mb-6">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center p-2 border-2 border-primary-100">
-                <Image 
-                  src="/assets/images/logo/vsv-unite.png" 
-                  alt="VSV Unite Logo" 
-                  width={64} 
-                  height={64}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">VSV Unite</span>
+              <Image
+                src="/assets/images/logo/vsv.jpeg"
+                alt="VSV Unite Logo"
+                width={80}
+                height={80}
+                className="w-20 h-20 object-contain"
+              />
+              <span className="text-2xl font-bold text-gray-900">
+                VSV Unite
+              </span>
             </Link>
           </div>
 
           {/* Header */}
           <div className="mb-6 lg:mb-8">
-            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Sign In</h2>
+            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+              Sign In
+            </h2>
             <p className="text-gray-500 text-sm lg:text-base">
               Don&apos;t have an account?{" "}
-              <Link href="/register" className="text-primary-500 hover:text-primary-600 font-medium">
+              <Link
+                href="/register"
+                className="text-primary-500 hover:text-primary-600 font-medium"
+              >
                 Create one
               </Link>
             </p>
@@ -214,7 +240,10 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-5">
             {/* Referral ID or Email */}
             <div className="space-y-1.5 lg:space-y-2">
-              <Label htmlFor="identifier" className="text-gray-700 text-sm font-medium">
+              <Label
+                htmlFor="identifier"
+                className="text-gray-700 text-sm font-medium"
+              >
                 Referral ID or Email <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -235,10 +264,12 @@ export default function LoginPage() {
             {/* Password */}
             <div className="space-y-1.5 lg:space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-gray-700 text-sm font-medium">
+                <Label
+                  htmlFor="password"
+                  className="text-gray-700 text-sm font-medium"
+                >
                   Password <span className="text-red-500">*</span>
                 </Label>
-                
               </div>
               <div className="relative">
                 <Input
@@ -256,7 +287,11 @@ export default function LoginPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
