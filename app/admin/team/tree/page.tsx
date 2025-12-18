@@ -70,6 +70,42 @@ type UserDetails = {
   };
 };
 
+// Plan color mapping
+const getPlanColors = (plan: string | null | undefined) => {
+  switch (plan) {
+    case "Basic":
+      return {
+        border: "border-slate-400",
+        bg: "bg-slate-400",
+        shadow: "shadow-slate-100",
+      };
+    case "Medium":
+      return {
+        border: "border-blue-500",
+        bg: "bg-blue-500",
+        shadow: "shadow-blue-100",
+      };
+    case "Large":
+      return {
+        border: "border-purple-500",
+        bg: "bg-purple-500",
+        shadow: "shadow-purple-100",
+      };
+    case "Premium":
+      return {
+        border: "border-amber-500",
+        bg: "bg-amber-500",
+        shadow: "shadow-amber-100",
+      };
+    default:
+      return {
+        border: "border-gray-300",
+        bg: "bg-gray-400",
+        shadow: "shadow-gray-100",
+      };
+  }
+};
+
 function TreeNodeComponent({
   node,
   isRoot = false,
@@ -79,31 +115,39 @@ function TreeNodeComponent({
   isRoot?: boolean;
   onNodeClick: (nodeId: string) => void;
 }) {
+  const planColors = getPlanColors(node.currentPlan);
+  const avatarColor = node.isActive ? "bg-green-500" : "bg-red-500";
   const isLeft = node.placement === "LEFT";
+  const isRight = node.placement === "RIGHT";
 
   return (
     <div className="flex flex-col items-center">
+      {/* L/R Side Indicator */}
+      {!isRoot && (isLeft || isRight) && (
+        <div
+          className={cn(
+            "mb-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold text-white",
+            isLeft ? "bg-blue-500" : "bg-purple-500"
+          )}
+        >
+          {isLeft ? "L" : "R"}
+        </div>
+      )}
+
       {/* Node Card - Mobile responsive */}
       <div
         onClick={() => onNodeClick(node.referralId)}
         className={cn(
           "relative px-3 py-2 sm:px-6 sm:py-4 rounded-xl border-2 min-w-[120px] sm:min-w-[160px] transition-all hover:scale-105 hover:shadow-lg bg-card z-10 cursor-pointer",
-          isRoot
-            ? "border-primary-500 shadow-primary-100"
-            : isLeft
-            ? "border-blue-400 shadow-blue-100"
-            : "border-purple-400 shadow-purple-100"
+          isRoot ? "border-primary-500 shadow-primary-100" : planColors.border,
+          !isRoot && planColors.shadow
         )}
       >
         <div className="flex flex-col items-center gap-0.5 sm:gap-1">
           <div
             className={cn(
               "w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-1 sm:mb-2",
-              isRoot
-                ? "bg-primary-500"
-                : isLeft
-                ? "bg-blue-400"
-                : "bg-purple-400"
+              avatarColor
             )}
           >
             <Users className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
@@ -115,16 +159,21 @@ function TreeNodeComponent({
             {node.referralId}
           </p>
           {node.currentPlan && (
-            <div className="mt-1 sm:mt-2 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-primary-50 border border-primary-200">
-              <p className="text-[10px] sm:text-xs font-medium text-primary-700 truncate max-w-[80px] sm:max-w-[120px]">
+            <div
+              className={cn(
+                "mt-1 sm:mt-2 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border",
+                node.currentPlan === "Basic" &&
+                  "bg-slate-50 border-slate-300 text-slate-700",
+                node.currentPlan === "Medium" &&
+                  "bg-blue-50 border-blue-300 text-blue-700",
+                node.currentPlan === "Large" &&
+                  "bg-purple-50 border-purple-300 text-purple-700",
+                node.currentPlan === "Premium" &&
+                  "bg-amber-50 border-amber-300 text-amber-700"
+              )}
+            >
+              <p className="text-[10px] sm:text-xs font-medium truncate max-w-[80px] sm:max-w-[120px]">
                 {node.currentPlan}
-              </p>
-            </div>
-          )}
-          {!node.isActive && (
-            <div className="mt-0.5 sm:mt-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-red-50 border border-red-200">
-              <p className="text-[10px] sm:text-xs font-medium text-red-600">
-                Inactive
               </p>
             </div>
           )}
@@ -851,31 +900,82 @@ export default function AdminBinaryTreePage() {
 
       {/* Legend */}
       <div className="mt-4 sm:mt-6 bg-card border border-border rounded-xl p-3 sm:p-4 shadow-sm">
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 items-start sm:items-center justify-between">
+        <div className="flex flex-col gap-3">
+          {/* Status Legend */}
           <div className="flex flex-wrap gap-3 sm:gap-6 items-center">
             <span className="text-xs sm:text-sm font-semibold text-foreground">
-              Legend:
+              Status:
             </span>
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-primary-500"></div>
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-500"></div>
               <span className="text-xs sm:text-sm text-muted-foreground">
-                Root
+                Active
               </span>
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-blue-400"></div>
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500"></div>
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                Inactive
+              </span>
+            </div>
+          </div>
+
+          {/* Side Legend */}
+          <div className="flex flex-wrap gap-3 sm:gap-6 items-center">
+            <span className="text-xs sm:text-sm font-semibold text-foreground">
+              Side:
+            </span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-500 flex items-center justify-center text-[8px] sm:text-[10px] font-bold text-white">
+                L
+              </div>
               <span className="text-xs sm:text-sm text-muted-foreground">
                 Left
               </span>
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-purple-400"></div>
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-purple-500 flex items-center justify-center text-[8px] sm:text-[10px] font-bold text-white">
+                R
+              </div>
               <span className="text-xs sm:text-sm text-muted-foreground">
                 Right
               </span>
             </div>
           </div>
-          <div className="hidden sm:flex flex-wrap gap-4 text-xs text-muted-foreground">
+
+          {/* Plan Legend */}
+          <div className="flex flex-wrap gap-3 sm:gap-6 items-center">
+            <span className="text-xs sm:text-sm font-semibold text-foreground">
+              Plans:
+            </span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-slate-400"></div>
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                Basic
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-blue-500"></div>
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                Medium
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-purple-500"></div>
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                Large
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-amber-500"></div>
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                Premium
+              </span>
+            </div>
+          </div>
+
+          {/* Controls hint - desktop only */}
+          <div className="hidden sm:flex flex-wrap gap-4 text-xs text-muted-foreground border-t border-border pt-3">
             <div className="flex items-center gap-1">
               <span>💡</span>
               <span>Click for details</span>
