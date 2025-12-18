@@ -85,7 +85,7 @@ export default function Footer() {
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3 mb-4">
               <Image 
-                src="/assets/images/logo/vsv-unite.png" 
+                src="/assets/images/logo/vsv.jpeg" 
                 alt={`${settings.companyName || 'VSV Unite'} Logo`}
                 width={56} 
                 height={56}
