@@ -1,425 +1,707 @@
+// 
+
+
 "use client";
 
-import { useState, useEffect } from "react";
+import {
+  Users,
+  ZoomIn,
+  ZoomOut,
+  Maximize,
+  Network,
+  X,
+  Phone,
+  Mail,
+  Calendar,
+  TrendingUp,
+  Wallet,
+  Copy,
+} from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PageContainer, PageHeader } from "@/components/ui/page-components";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import { axiosInstance } from "@/lib/api";
-import { toast } from "sonner";
 
-import { Users, ZoomIn, ZoomOut, Maximize, Network, ChevronDown, CheckCircle, XCircle, DollarSign, Activity, Calendar } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-
-
-// Update TreeNode type to match backend
 type TreeNode = {
   id: string;
-  _id?: string;
-  referralId?: string;
   name: string;
-  package?: string;
-  packageAmount?: number;
-  position: "left" | "right" | "root";
-  isActive?: boolean;
+  referralId: string;
+  placement?: string | null;
+  currentPlan?: string | null;
+  isActive: boolean;
   leftPV?: number;
   rightPV?: number;
-  totalPV?: number;
-  rank?: string;
-  joinDate?: string;
-  dailyPVUsed?: number;
-  dailyCapping?: number;
-  walletBalance?: number;
-  totalEarnings?: number;
-  directReferrals?: number;
-  children?: TreeNode[];
-  hasChildren?: boolean;
-  isExpanded?: boolean;
-  isLoading?: boolean;
+  left?: TreeNode | null;
+  right?: TreeNode | null;
 };
 
-// User Details Modal Component
-function UserDetailsModal({
+type UserDetails = {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  mobile: string;
+  referralId: string;
+  sponsorId: string;
+  sponsor: { name: string; referralId: string } | null;
+  placement?: string;
+  isActive: boolean;
+  currentPlan: {
+    name: string;
+    amount: number;
+    pv: number;
+    dailyCapping: number;
+  } | null;
+  wallet: {
+    balance: number;
+    totalEarnings: number;
+    totalWithdrawals: number;
+  };
+  pv: {
+    leftPV: number;
+    rightPV: number;
+    totalPV: number;
+    planPV: number;
+    dailyPVUsed: number;
+  };
+  team: {
+    total: number;
+    left: number;
+    right: number;
+  };
+  joinedAt: string;
+  lastActive: string;
+  incomeBreakdown?: {
+    REFERRAL_INCOME: number;
+    MATCHING_INCOME: number;
+    LEVEL_INCOME: number;
+  };
+};
+
+function TreeNodeComponent({
   node,
-  isOpen,
-  onClose,
+  isRoot = false,
+  onNodeClick,
 }: {
-  node: TreeNode | null;
-  isOpen: boolean;
-  onClose: () => void;
+  node: TreeNode;
+  isRoot?: boolean;
+  onNodeClick: (nodeId: string) => void;
 }) {
-  if (!node) return null;
+  const isLeft = node.placement === "LEFT";
+  const isRight = node.placement === "RIGHT";
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center gap-4">
-            <div className={cn(
-              "w-12 h-12 rounded-full flex items-center justify-center border-2",
-              node.isActive ? "bg-green-100 border-green-200 text-green-600" : "bg-red-100 border-red-200 text-red-600"
-            )}>
-              <Users className="w-6 h-6" />
-            </div>
-            <div>
-              <DialogTitle className="text-xl font-bold">{node.name}</DialogTitle>
-              <DialogDescription className="font-mono text-xs mt-1">
-                ID: {node.referralId || node.id || node._id}
-              </DialogDescription>
-            </div>
+    <div className="flex flex-col items-center">
+      {/* Node Card */}
+      <div
+        onClick={() => onNodeClick(node.referralId)}
+        className={cn(
+          "relative px-6 py-4 rounded-xl border-2 min-w-[160px] transition-all hover:scale-105 hover:shadow-lg bg-card z-10 cursor-pointer",
+          isRoot
+            ? "border-primary-500 shadow-primary-100"
+            : isLeft
+            ? "border-blue-400 shadow-blue-100"
+            : "border-purple-400 shadow-purple-100"
+        )}
+      >
+        <div className="flex flex-col items-center gap-1">
+          <div
+            className={cn(
+              "w-12 h-12 rounded-full flex items-center justify-center mb-2",
+              isRoot
+                ? "bg-primary-500"
+                : isLeft
+                ? "bg-blue-400"
+                : "bg-purple-400"
+            )}
+          >
+            <Users className="w-6 h-6 text-white" />
           </div>
-        </DialogHeader>
-
-        <div className="grid gap-4 py-4">
-          {/* Status & Rank */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-3 bg-muted/40 rounded-lg border">
-              <span className="text-xs text-muted-foreground block mb-1">Status</span>
-              <div className="flex items-center gap-2">
-                {node.isActive ? (
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                ) : (
-                  <XCircle className="w-4 h-4 text-red-500" />
-                )}
-                <span className={cn(
-                  "font-bold text-sm",
-                  node.isActive ? "text-green-600" : "text-red-600"
-                )}>
-                  {node.isActive ? "Active" : "Inactive"}
-                </span>
-              </div>
+          <p className="text-sm font-bold text-foreground text-center">
+            {node.name}
+          </p>
+          <p className="text-xs text-muted-foreground">{node.referralId}</p>
+          {node.currentPlan && (
+            <div className="mt-2 px-3 py-1 rounded-full bg-primary-50 border border-primary-200">
+              <p className="text-xs font-medium text-primary-700">
+                {node.currentPlan}
+              </p>
             </div>
-            <div className="p-3 bg-muted/40 rounded-lg border">
-              <span className="text-xs text-muted-foreground block mb-1">Rank</span>
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-amber-500" />
-                <span className="font-bold text-sm text-foreground">
-                  {node.rank || "Member"}
-                </span>
-              </div>
+          )}
+          {!node.isActive && (
+            <div className="mt-1 px-2 py-0.5 rounded-full bg-red-50 border border-red-200">
+              <p className="text-xs font-medium text-red-600">Inactive</p>
             </div>
-          </div>
-
-          {/* Wallet & Referral Info (NEW) */}
-          <Card className="bg-gradient-to-br from-indigo-50 to-blue-50 border-blue-100">
-            <CardContent className="p-4">
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <p className="text-[10px] text-blue-600 font-semibold uppercase tracking-wider">Wallet Bal</p>
-                  <p className="text-lg font-bold text-blue-900 mt-1">₹{node.walletBalance?.toFixed(2) || "0.00"}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-indigo-600 font-semibold uppercase tracking-wider">Total Earn</p>
-                  <p className="text-lg font-bold text-indigo-900 mt-1">₹{node.totalEarnings?.toFixed(2) || "0.00"}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-teal-600 font-semibold uppercase tracking-wider">Direct Refs</p>
-                  <p className="text-lg font-bold text-teal-900 mt-1">{node.directReferrals || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* PV Details */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Matching Stats (Calculated at EOD)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="flex flex-col items-center p-2 bg-blue-50 rounded-md border border-blue-100">
-                  <span className="text-[10px] uppercase font-bold text-blue-500">Carry Fwd (L)</span>
-                  <span className="text-lg font-black text-blue-700">{node.leftPV || 0}</span>
-                </div>
-                <div className="flex flex-col items-center p-2 bg-purple-50 rounded-md border border-purple-100">
-                  <span className="text-[10px] uppercase font-bold text-purple-500">Carry Fwd (R)</span>
-                  <span className="text-lg font-black text-purple-700">{node.rightPV || 0}</span>
-                </div>
-                <div className="flex flex-col items-center p-2 bg-slate-50 rounded-md border border-slate-100">
-                  <span className="text-[10px] uppercase font-bold text-slate-500">Total Matched</span>
-                  <span className="text-lg font-black text-slate-700">{node.totalPV || 0}</span>
-                </div>
-              </div>
-
-              <div className="mt-3 pt-3 border-t">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs font-semibold text-muted-foreground">Daily Capping Usage</span>
-                  <span className="text-xs font-bold text-foreground">
-                    {node.dailyPVUsed || 0} / {node.dailyCapping || 0} PV
-                  </span>
-                </div>
-                {/* Simple Progress Bar */}
-                <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary"
-                    style={{ width: `${Math.min(((node.dailyPVUsed || 0) / (node.dailyCapping || 1)) * 100, 100)}%` }}
-                  ></div>
-                </div>
-                <p className="text-[10px] text-muted-foreground mt-1 text-right">
-                  Reset daily at midnight IST
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Plan Info */}
-          <div className="flex items-center justify-between p-3 border rounded-lg bg-card">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
-                <DollarSign className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Current Package</p>
-                <p className="text-xs text-muted-foreground">
-                  {node.joinDate ? `Joined: ${new Date(node.joinDate).toLocaleDateString()}` : "Join date unknown"}
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-bold text-foreground">{node.package || "No Plan"}</p>
-              <p className="text-xs text-muted-foreground">₹{node.packageAmount || 0}</p>
-            </div>
-          </div>
-
+          )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+
+      {/* Children */}
+      {(node.left || node.right) && (
+        <>
+          {/* Vertical Line Down */}
+          <div className="w-0.5 h-8 bg-border my-2"></div>
+
+          {/* Horizontal Line */}
+          <div className="relative w-full">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-0.5 bg-border"></div>
+            <div className="flex justify-around gap-8 pt-2">
+              {/* Left Child */}
+              <div className="relative">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-8 bg-border"></div>
+                <div className="pt-8">
+                  {node.left ? (
+                    <TreeNodeComponent
+                      node={node.left}
+                      onNodeClick={onNodeClick}
+                    />
+                  ) : (
+                    <div className="px-6 py-4 rounded-xl border-2 border-dashed border-border bg-muted/30 min-w-[160px] flex items-center justify-center">
+                      <p className="text-xs text-muted-foreground">Empty</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Child */}
+              <div className="relative">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-8 bg-border"></div>
+                <div className="pt-8">
+                  {node.right ? (
+                    <TreeNodeComponent
+                      node={node.right}
+                      onNodeClick={onNodeClick}
+                    />
+                  ) : (
+                    <div className="px-6 py-4 rounded-xl border-2 border-dashed border-border bg-muted/30 min-w-[160px] flex items-center justify-center">
+                      <p className="text-xs text-muted-foreground">Empty</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
-export default function BinaryTreePage() {
+function UserDetailsModal({
+  userId,
+  onClose,
+}: {
+  userId: string | null;
+  onClose: () => void;
+}) {
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (userId) {
+      fetchUserDetails();
+    }
+  }, [userId]);
+
+  const fetchUserDetails = async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.get(`/api/user/details/${userId}`);
+      if (response.data.success) {
+        setUserDetails(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!userId) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-card border border-border rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-card border-b border-border p-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-primary-500 flex items-center justify-center">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-foreground">
+                User Details
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Complete information
+              </p>
+            </div>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+
+        {/* Content */}
+        {loading ? (
+          <div className="p-8 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          </div>
+        ) : userDetails ? (
+          <div className="p-6 space-y-6">
+            {/* Basic Info */}
+            <div className="bg-muted/30 rounded-xl p-4 space-y-3">
+              <h3 className="font-semibold text-foreground mb-3">
+                Basic Information
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground">Name</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {userDetails.name}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Username</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {userDetails.username}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Referral ID</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-primary-600">
+                      {userDetails.referralId}
+                    </p>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(userDetails.referralId);
+                        toast.success("Referral ID copied!");
+                      }}
+                      className="p-1 hover:bg-muted rounded transition-colors"
+                      title="Copy Referral ID"
+                    >
+                      <Copy className="w-3.5 h-3.5 text-muted-foreground hover:text-primary-600" />
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Status</p>
+                  <span
+                    className={cn(
+                      "inline-block px-2 py-1 rounded-full text-xs font-medium",
+                      userDetails.isActive
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    )}
+                  >
+                    {userDetails.isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Contact Info */}
+            <div className="bg-muted/30 rounded-xl p-4 space-y-3">
+              <h3 className="font-semibold text-foreground mb-3">
+                Contact Information
+              </h3>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-muted-foreground" />
+                  <p className="text-sm text-foreground">{userDetails.email}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-muted-foreground" />
+                  <p className="text-sm text-foreground">
+                    {userDetails.mobile}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Sponsor Info */}
+            {userDetails.sponsor && (
+              <div className="bg-muted/30 rounded-xl p-4">
+                <h3 className="font-semibold text-foreground mb-3">
+                  Sponsor & Placement Details
+                </h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      Sponsor Name
+                    </p>
+                    <p className="text-sm font-medium text-foreground">
+                      {userDetails.sponsor.name}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Sponsor ID</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {userDetails.sponsor.referralId}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      Placement Side
+                    </p>
+                    {userDetails.placement ? (
+                      <span
+                        className={cn(
+                          "inline-block px-2.5 py-0.5 rounded-md text-xs font-medium border",
+                          userDetails.placement === "LEFT"
+                            ? "bg-blue-100 text-blue-800 border-blue-300"
+                            : "bg-purple-100 text-purple-800 border-purple-300"
+                        )}
+                      >
+                        {userDetails.placement}
+                      </span>
+                    ) : (
+                      <p className="text-sm font-medium text-foreground">-</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Plan Info */}
+            {userDetails.currentPlan && (
+              <div className="bg-primary-50 border border-primary-200 rounded-xl p-4">
+                <h3 className="font-semibold text-primary-900 mb-3">
+                  Current Plan
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-primary-700">Plan Name</p>
+                    <p className="text-sm font-medium text-primary-900">
+                      {userDetails.currentPlan.name}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-primary-700">Amount</p>
+                    <p className="text-sm font-medium text-primary-900">
+                      ₹{userDetails.currentPlan.amount}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-primary-700">PV Value</p>
+                    <p className="text-sm font-medium text-primary-900">
+                      {userDetails.currentPlan.pv} PV
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-primary-700">Daily Capping</p>
+                    <p className="text-sm font-medium text-primary-900">
+                      ₹{userDetails.currentPlan.dailyCapping}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Wallet Info */}
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+              <h3 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+                <Wallet className="w-4 h-4" />
+                Wallet Details
+              </h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-xs text-green-700">Balance</p>
+                  <p className="text-lg font-bold text-green-900">
+                    ₹{userDetails.wallet.balance}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-green-700">Total Earnings</p>
+                  <p className="text-lg font-bold text-green-900">
+                    ₹{userDetails.wallet.totalEarnings}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-green-700">Withdrawals</p>
+                  <p className="text-lg font-bold text-green-900">
+                    ₹{userDetails.wallet.totalWithdrawals}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Income Breakdown */}
+            {userDetails.incomeBreakdown && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <h3 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" />
+                  Income Breakdown
+                </h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-amber-700">Referral Income</p>
+                    <p className="text-lg font-bold text-amber-900">
+                      ₹{userDetails.incomeBreakdown.REFERRAL_INCOME || 0}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-amber-700">Matching Income</p>
+                    <p className="text-lg font-bold text-amber-900">
+                      ₹{userDetails.incomeBreakdown.MATCHING_INCOME || 0}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-amber-700">Level Income</p>
+                    <p className="text-lg font-bold text-amber-900">
+                      ₹{userDetails.incomeBreakdown.LEVEL_INCOME || 0}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* PV Stats */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                PV Statistics
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-blue-700">Left PV</p>
+                  <p className="text-lg font-bold text-blue-900">
+                    {userDetails.pv.leftPV}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-blue-700">Right PV</p>
+                  <p className="text-lg font-bold text-blue-900">
+                    {userDetails.pv.rightPV}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-blue-700">Total PV (Lifetime)</p>
+                  <p className="text-lg font-bold text-blue-900">
+                    {userDetails.pv.totalPV}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-blue-700">Daily PV used</p>
+                  <p className="text-lg font-bold text-blue-900">
+                    {userDetails.pv.dailyPVUsed || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Team Stats */}
+
+            {/* Dates */}
+            <div className="bg-muted/30 rounded-xl p-4">
+              <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Activity
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground">Joined</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {new Date(userDetails.joinedAt).toLocaleString("en-IN", { timeZone: 'Asia/Kolkata' })} IST
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Last Active</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {new Date(userDetails.lastActive).toLocaleString("en-IN", { timeZone: 'Asia/Kolkata' })} IST
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="p-8 text-center text-muted-foreground">
+            Failed to load user details
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function AdminBinaryTreePage() {
   const [treeData, setTreeData] = useState<TreeNode | null>(null);
   const [loading, setLoading] = useState(true);
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [mounted, setMounted] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-  // Modal State
-  const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Zoom and Pan state
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [isSpacePressed, setIsSpacePressed] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-  // Fetch tree data from API
   useEffect(() => {
-    const fetchTreeData = async () => {
+    setMounted(true);
+  }, []);
+
+  // Keyboard event handlers for spacebar pan mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space" && !isSpacePressed) {
+        e.preventDefault();
+        setIsSpacePressed(true);
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        setIsSpacePressed(false);
+        setIsPanning(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [isSpacePressed]);
+
+  // Wheel event handler for zoom and scroll
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      // Check if the event target is within the tree container
+      const treeContainer = document.getElementById("tree-container");
+      if (!treeContainer?.contains(e.target as Node)) return;
+
+      if (e.ctrlKey || e.metaKey) {
+        // Ctrl+scroll for zoom
+        e.preventDefault();
+        const zoomDelta = e.deltaY > 0 ? -0.1 : 0.1;
+        setZoom((prev) => Math.max(0.3, Math.min(3, prev + zoomDelta)));
+      } else {
+        // Regular scroll for vertical navigation
+        e.preventDefault();
+        const scrollDelta = e.deltaY * 0.5;
+        setPan((prev) => ({
+          x: prev.x,
+          y: prev.y - scrollDelta,
+        }));
+      }
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    const fetchTree = async () => {
       try {
-        setLoading(true);
-        const response = await axiosInstance.get('/api/team/tree');
+        const response = await axiosInstance.get("/api/user/team/tree");
         if (response.data.success) {
           setTreeData(response.data.data);
         }
       } catch (error: any) {
-        console.error('Failed to fetch tree data:', error);
-        toast.error('Failed to load binary tree', {
-          description: error.response?.data?.message || 'Please try again',
-        });
+        console.error("Error fetching tree:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTreeData();
-  }, []);
+    fetchTree();
+  }, [mounted]);
 
-  // Handle Node Click
-  const handleNodeClick = async (node: TreeNode) => {
-    // 1. Open Details Modal (Always open on click)
-    setSelectedNode(node);
-    setIsModalOpen(true);
-
-    // 2. Expand/Collapse Logic (Only if has children)
-    if (!node.hasChildren) return;
-
-    const nodeKey = node._id || node.id;
-
-    // Only fetch/toggle if NOT handled by modal close or specific expand button
-    // Actually, let's decouple expand from view details.
-    // Clicking the "Expand" button handles expansion.
-    // Clicking the CARD handles details.
+  const handleNodeClick = (nodeId: string) => {
+    if (!isPanning && !isSpacePressed) {
+      setSelectedUserId(nodeId);
+    }
   };
 
-  // Separate handler for expansion
-  const handleToggleExpand = async (e: React.MouseEvent, node: TreeNode) => {
-    e.stopPropagation(); // prevent opening modal
+  // Zoom functions
+  const handleZoomIn = () => {
+    setZoom((prev) => Math.min(prev + 0.2, 3));
+  };
 
-    if (!node.hasChildren) return;
+  const handleZoomOut = () => {
+    setZoom((prev) => Math.max(prev - 0.2, 0.3));
+  };
 
-    const nodeKey = node._id || node.id;
+  const handleResetView = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
 
-    // If already expanded, just collapse
-    if (expandedNodes.has(nodeKey)) {
-      setExpandedNodes(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(nodeKey);
-        return newSet;
+  // Pan functions
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (isSpacePressed) {
+      setIsPanning(true);
+      setDragStart({ x: e.clientX, y: e.clientY });
+      setDragOffset(pan);
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isPanning && isSpacePressed) {
+      const deltaX = e.clientX - dragStart.x;
+      const deltaY = e.clientY - dragStart.y;
+      setPan({
+        x: dragOffset.x + deltaX,
+        y: dragOffset.y + deltaY,
       });
-      return;
-    }
-
-    // If has children already loaded, just expand
-    if (node.children && node.children.length > 0) {
-      setExpandedNodes(prev => new Set(prev).add(nodeKey));
-      return;
-    }
-
-    // Fetch children from API
-    try {
-      const response = await axiosInstance.get(`/api/team/node/${nodeKey}/children`);
-
-      if (response.data.success) {
-        const { left, right } = response.data.data;
-
-        const updateNodeChildren = (n: TreeNode): TreeNode => {
-          if ((n._id || n.id) === nodeKey) {
-            return {
-              ...n,
-              children: [left, right].filter(Boolean),
-            };
-          }
-          if (n.children) {
-            return {
-              ...n,
-              children: n.children.map(updateNodeChildren),
-            };
-          }
-          return n;
-        };
-
-        if (treeData) {
-          setTreeData(updateNodeChildren(treeData));
-          setExpandedNodes(prev => new Set(prev).add(nodeKey));
-        }
-      }
-    } catch (error: any) {
-      console.error('Failed to fetch node children:', error);
-      toast.error('Failed to load children');
     }
   };
 
-  function TreeNodeComponent({
-    node,
-    onNodeClick,
-    onToggleExpand,
-    expandedNodes
-  }: {
-    node: TreeNode;
-    onNodeClick: (node: TreeNode) => void;
-    onToggleExpand: (e: React.MouseEvent, node: TreeNode) => void;
-    expandedNodes: Set<string>;
-  }) {
-    const isRoot = node.position === "root";
-    const isLeft = node.position === "left";
-    const hasChildren = node.hasChildren || (node.children && node.children.length > 0);
-    const nodeKey = node._id || node.id;
-    const isExpanded = expandedNodes.has(nodeKey);
+  const handleMouseUp = () => {
+    setIsPanning(false);
+  };
 
+  // Prevent context menu when space is pressed
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (isSpacePressed) {
+      e.preventDefault();
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="flex flex-col items-center">
-        {/* Node Card */}
-        <div
-          onClick={() => onNodeClick(node)}
-          className={cn(
-            "relative px-6 py-4 rounded-xl border-2 min-w-[160px] transition-all hover:scale-105 hover:shadow-lg bg-card z-10 cursor-pointer group",
-            isRoot
-              ? "border-primary-500 shadow-primary-100"
-              : isLeft
-                ? "border-blue-400 shadow-blue-100"
-                : "border-purple-400 shadow-purple-100",
-            // Inactive style override
-            !node.isActive && "border-slate-300 opacity-90"
-          )}
-        >
-          <div className="flex flex-col items-center gap-1">
-            <div
-              className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center mb-2 shadow-sm border-2",
-                node.isActive
-                  ? (isRoot ? "bg-primary-100 border-primary-200 text-primary-600" : isLeft ? "bg-blue-100 border-blue-200 text-blue-600" : "bg-purple-100 border-purple-200 text-purple-600")
-                  : "bg-slate-100 border-slate-200 text-slate-500"
-              )}
-            >
-              <Users className="w-6 h-6" />
-            </div>
-
-            <p className="text-sm font-bold text-foreground truncate max-w-[120px]">{node.name}</p>
-            <p className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
-              {node.referralId || node.id || "Unknown"}
-            </p>
-
-            <div className="flex flex-col items-center gap-1 mt-1">
-              {/* Status Badge */}
-              <span className={cn(
-                "text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
-                node.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-              )}>
-                {node.isActive ? "Active" : "Inactive"}
-              </span>
-
-              {/* Plan Badge */}
-              {node.package && (
-                <span className="text-[9px] font-semibold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full border border-primary-100 truncate max-w-[120px]">
-                  {node.package}
-                </span>
-              )}
-            </div>
-
-            {/* Expand Indicator Button */}
-            {hasChildren && (
-              <button
-                onClick={(e) => onToggleExpand(e, node)}
-                className="mt-3 flex items-center gap-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 px-2 py-1 rounded transition-colors"
-              >
-                <ChevronDown
-                  className={cn(
-                    "w-3 h-3 transition-transform",
-                    isExpanded && "rotate-180"
-                  )}
-                />
-                <span>{isExpanded ? 'Collapse Team' : 'View Team'}</span>
-              </button>
-            )}
-          </div>
-
-          {/* Position Badge */}
-          {!isRoot && (
-            <div className={cn(
-              "absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2 py-0.5 rounded-full border bg-white shadow-sm uppercase tracking-widest",
-              isLeft
-                ? "text-blue-600 border-blue-200"
-                : "text-purple-600 border-purple-200"
-            )}>
-              {node.position}
-            </div>
-          )}
+      <PageContainer maxWidth="full">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
         </div>
+      </PageContainer>
+    );
+  }
 
-        {/* Children */}
-        {isExpanded && node.children && node.children.length > 0 && (
-          <>
-            {/* Connector Line */}
-            <div className="w-0.5 h-8 bg-border my-2"></div>
-
-            {/* Horizontal Line */}
-            <div className="relative w-full">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-0.5 bg-border"></div>
-              <div className="flex justify-around gap-8 pt-2">
-                {node.children.map((child) => (
-                  <div key={child.id} className="relative">
-                    {/* Vertical connector */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-8 bg-border"></div>
-                    <div className="pt-8">
-                      <TreeNodeComponent
-                        node={child}
-                        onNodeClick={onNodeClick}
-                        onToggleExpand={onToggleExpand}
-                        expandedNodes={expandedNodes}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
+  if (!treeData) {
+    return (
+      <PageContainer maxWidth="full">
+        <PageHeader
+          icon={<Network className="w-6 h-6 text-white" />}
+          title="Binary Tree View"
+          subtitle="Visualize your network structure"
+        />
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
+          <Network className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <p className="text-lg text-muted-foreground">
+            No team data available
+          </p>
+        </div>
+      </PageContainer>
     );
   }
 
@@ -428,16 +710,34 @@ export default function BinaryTreePage() {
       <PageHeader
         icon={<Network className="w-6 h-6 text-white" />}
         title="Binary Tree View"
-        subtitle="Visualize network structure & performance"
+        subtitle="Click on any user to view detailed information"
         action={
           <div className="flex gap-2">
-            <Button variant="outline" size="icon" className="h-10 w-10 border-border hover:bg-muted">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 border-border hover:bg-muted"
+              onClick={handleZoomIn}
+              disabled={zoom >= 3}
+            >
               <ZoomIn className="w-4 h-4" />
             </Button>
-            <Button variant="outline" size="icon" className="h-10 w-10 border-border hover:bg-muted">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 border-border hover:bg-muted"
+              onClick={handleZoomOut}
+              disabled={zoom <= 0.3}
+            >
               <ZoomOut className="w-4 h-4" />
             </Button>
-            <Button variant="outline" size="icon" className="h-10 w-10 border-border hover:bg-muted">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 border-border hover:bg-muted"
+              onClick={handleResetView}
+              title="Reset View"
+            >
               <Maximize className="w-4 h-4" />
             </Button>
           </div>
@@ -445,57 +745,103 @@ export default function BinaryTreePage() {
       />
 
       {/* Tree Container */}
-      <div className="bg-muted/30 border border-border rounded-2xl p-8 sm:p-12 overflow-x-auto min-h-[600px] flex flex-col items-center justify-center relative">
+      <div
+        id="tree-container"
+        className={cn(
+          "bg-muted/30 border border-border rounded-2xl overflow-hidden min-h-[600px] flex flex-col items-center justify-center relative select-none",
+          isSpacePressed ? "cursor-grab" : "cursor-default",
+          isPanning ? "cursor-grabbing" : ""
+        )}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onContextMenu={handleContextMenu}
+      >
         {/* Background Grid Pattern */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-          style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
+        <div
+          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{
+            backgroundImage: "radial-gradient(#000 1px, transparent 1px)",
+            backgroundSize: `${20 * zoom}px ${20 * zoom}px`,
+            transform: `translate(${pan.x}px, ${pan.y}px)`,
+          }}
+        />
+
+        {/* Zoom Level Indicator */}
+        <div className="absolute top-4 left-4 bg-card border border-border rounded-lg px-3 py-1 text-sm font-medium text-foreground z-20">
+          {Math.round(zoom * 100)}%
         </div>
 
-        {loading ? (
-          <div className="text-center z-10">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading binary tree...</p>
-          </div>
-        ) : treeData ? (
-          <div className="flex justify-center min-w-max z-10 pb-20">
-            <TreeNodeComponent
-              node={treeData}
-              onNodeClick={handleNodeClick}
-              onToggleExpand={handleToggleExpand}
-              expandedNodes={expandedNodes}
-            />
-          </div>
-        ) : (
-          <div className="text-center z-10">
-            <Network className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">No Team Data</h3>
-            <p className="text-muted-foreground">Start building your team to see the binary tree</p>
+        {/* Pan Mode Indicator */}
+        {isSpacePressed && (
+          <div className="absolute top-4 right-4 bg-primary-500 text-white rounded-lg px-3 py-1 text-sm font-medium z-20 flex items-center gap-2">
+            <span>🖐️</span>
+            Pan Mode - Hold Space & Drag
           </div>
         )}
-      </div>
 
-      {/* Legend */}
-      <div className="mt-6 bg-card border border-border rounded-xl p-4 shadow-sm inline-flex flex-wrap gap-6 items-center">
-        <span className="text-sm font-semibold text-foreground mr-2">Legend:</span>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-primary-100 border border-primary-200"></div>
-          <span className="text-sm text-muted-foreground">You (Root)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-blue-100 border border-blue-200"></div>
-          <span className="text-sm text-muted-foreground">Left Team</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-purple-100 border border-purple-200"></div>
-          <span className="text-sm text-muted-foreground">Right Team</span>
+        <div
+          className="flex justify-center min-w-max z-10 transition-transform duration-150 ease-out"
+          style={{
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transformOrigin: "center center",
+          }}
+        >
+          <TreeNodeComponent
+            node={treeData}
+            isRoot={true}
+            onNodeClick={handleNodeClick}
+          />
         </div>
       </div>
 
-      {/* Details Modal */}
+      {/* Legend & Controls */}
+      <div className="mt-6 bg-card border border-border rounded-xl p-4 shadow-sm">
+        <div className="flex flex-wrap gap-6 items-center justify-between">
+          <div className="flex flex-wrap gap-6 items-center">
+            <span className="text-sm font-semibold text-foreground mr-2">
+              Legend:
+            </span>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-primary-500"></div>
+              <span className="text-sm text-muted-foreground">You (Root)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-blue-400"></div>
+              <span className="text-sm text-muted-foreground">Left Team</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-purple-400"></div>
+              <span className="text-sm text-muted-foreground">Right Team</span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <span>💡</span>
+              <span>Click nodes for details</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span>⌨️</span>
+              <span>Hold SPACE + drag to pan</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span>🔍</span>
+              <span>Ctrl+scroll to zoom</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span>📜</span>
+              <span>Scroll to navigate vertically</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* User Details Modal */}
       <UserDetailsModal
-        node={selectedNode}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        userId={selectedUserId}
+        onClose={() => setSelectedUserId(null)}
       />
     </PageContainer>
   );
