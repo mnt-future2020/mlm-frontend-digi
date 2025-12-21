@@ -52,6 +52,8 @@ export default function ManageTopupsPage() {
   const { user } = useAuth();
   const [topups, setTopups] = useState<TopupRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processingApproval, setProcessingApproval] = useState<string | null>(null);
+  const [processingRejection, setProcessingRejection] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("PENDING");
   const [selectedRequest, setSelectedRequest] = useState<TopupRequest | null>(
     null
@@ -94,9 +96,14 @@ export default function ManageTopupsPage() {
   }, [user, statusFilter]);
 
   const handleApprove = async (topupId: string) => {
+    if (processingApproval === topupId) return; // Prevent double-click
+    
+    setProcessingApproval(topupId);
     try {
       const response = await axiosInstance.post(
-        `/api/admin/topups/${topupId}/approve`
+        `/api/admin/topups/${topupId}/approve`,
+        {},
+        { timeout: 30000 } // 30 second timeout
       );
       if (response.data.success) {
         toast.success("Topup approved successfully");
@@ -107,17 +114,28 @@ export default function ManageTopupsPage() {
         await fetchTopups();
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to approve topup");
+      console.error("Approval error:", error);
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message || 
+                          error.message ||
+                          "Failed to approve topup";
+      toast.error(errorMessage);
+    } finally {
+      setProcessingApproval(null);
     }
   };
 
   const handleReject = async (topupId: string) => {
+    if (processingRejection === topupId) return; // Prevent double-click
+    
+    setProcessingRejection(topupId);
     try {
       const response = await axiosInstance.post(
         `/api/admin/topups/${topupId}/reject`,
         {
           reason: "Rejected by admin",
-        }
+        },
+        { timeout: 30000 } // 30 second timeout
       );
       if (response.data.success) {
         toast.success("Topup rejected");
@@ -128,7 +146,14 @@ export default function ManageTopupsPage() {
         await fetchTopups();
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to reject topup");
+      console.error("Rejection error:", error);
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message || 
+                          error.message ||
+                          "Failed to reject topup";
+      toast.error(errorMessage);
+    } finally {
+      setProcessingRejection(null);
     }
   };
 
@@ -281,9 +306,19 @@ export default function ManageTopupsPage() {
                         e.stopPropagation();
                         handleApprove(req.id);
                       }}
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white h-8 text-xs"
+                      disabled={processingApproval === req.id}
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white h-8 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <CheckCircle className="w-3 h-3 mr-1" /> Approve
+                      {processingApproval === req.id ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-3 h-3 mr-1" /> Approve
+                        </>
+                      )}
                     </Button>
                     <Button
                       size="sm"
@@ -292,9 +327,19 @@ export default function ManageTopupsPage() {
                         e.stopPropagation();
                         handleReject(req.id);
                       }}
-                      className="flex-1 border-red-200 text-red-600 hover:bg-red-50 h-8 text-xs"
+                      disabled={processingRejection === req.id}
+                      className="flex-1 border-red-200 text-red-600 hover:bg-red-50 h-8 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <XCircle className="w-3 h-3 mr-1" /> Reject
+                      {processingRejection === req.id ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600 mr-1"></div>
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-3 h-3 mr-1" /> Reject
+                        </>
+                      )}
                     </Button>
                   </div>
                 )}
@@ -382,16 +427,36 @@ export default function ManageTopupsPage() {
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <Button
                     onClick={() => handleApprove(selectedRequest.id)}
-                    className="bg-green-600 hover:bg-green-700 text-white shadow-md"
+                    disabled={processingApproval === selectedRequest.id}
+                    className="bg-green-600 hover:bg-green-700 text-white shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <CheckCircle className="w-4 h-4 mr-2" /> Approve Topup
+                    {processingApproval === selectedRequest.id ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" /> Approve Topup
+                      </>
+                    )}
                   </Button>
                   <Button
                     variant="destructive"
                     onClick={() => handleReject(selectedRequest.id)}
-                    className="bg-red-600 hover:bg-red-700 text-white shadow-md"
+                    disabled={processingRejection === selectedRequest.id}
+                    className="bg-red-600 hover:bg-red-700 text-white shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <XCircle className="w-4 h-4 mr-2" /> Reject Request
+                    {processingRejection === selectedRequest.id ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-4 h-4 mr-2" /> Reject Request
+                      </>
+                    )}
                   </Button>
                 </div>
               )}
