@@ -32,7 +32,7 @@ export default function AdminWithdrawalsPage() {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("PENDING");
-  const [processing, setProcessing] = useState<string | null>(null);
+  const [processingAction, setProcessingAction] = useState<{ id: string; action: "approve" | "reject" } | null>(null);
 
   const fetchWithdrawals = async () => {
     try {
@@ -54,31 +54,53 @@ export default function AdminWithdrawalsPage() {
   }, [user, filter]);
 
   const handleApprove = async (withdrawalId: string) => {
-    setProcessing(withdrawalId);
+    // Prevent double-click - check if already processing
+    if (processingAction) return;
+    
+    setProcessingAction({ id: withdrawalId, action: "approve" });
+    
+    // Optimistic UI update - immediately remove from pending list
+    setWithdrawals(prev => prev.filter(w => w.id !== withdrawalId));
+    
     try {
       await axiosInstance.put(`/api/admin/withdrawals/${withdrawalId}/approve`);
+      // Refresh to get updated data
       await fetchWithdrawals();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error approving withdrawal:", error);
-      alert("Failed to approve withdrawal");
+      const message = error?.response?.data?.detail || "Failed to approve withdrawal";
+      alert(message);
+      // Refresh to restore correct state on error
+      await fetchWithdrawals();
     } finally {
-      setProcessing(null);
+      setProcessingAction(null);
     }
   };
 
   const handleReject = async (withdrawalId: string) => {
+    // Prevent double-click - check if already processing
+    if (processingAction) return;
+    
     const reason = prompt("Enter rejection reason:");
     if (!reason) return;
 
-    setProcessing(withdrawalId);
+    setProcessingAction({ id: withdrawalId, action: "reject" });
+    
+    // Optimistic UI update - immediately remove from pending list
+    setWithdrawals(prev => prev.filter(w => w.id !== withdrawalId));
+    
     try {
       await axiosInstance.put(`/api/admin/withdrawals/${withdrawalId}/reject`, { reason });
+      // Refresh to get updated data
       await fetchWithdrawals();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error rejecting withdrawal:", error);
-      alert("Failed to reject withdrawal");
+      const message = error?.response?.data?.detail || "Failed to reject withdrawal";
+      alert(message);
+      // Refresh to restore correct state on error
+      await fetchWithdrawals();
     } finally {
-      setProcessing(null);
+      setProcessingAction(null);
     }
   };
 
@@ -174,21 +196,39 @@ export default function AdminWithdrawalsPage() {
                         <div className="flex gap-2">
                           <Button
                             size="sm"
-                            className="bg-green-600 hover:bg-green-700"
+                            className="bg-green-600 hover:bg-green-700 disabled:opacity-50"
                             onClick={() => handleApprove(w.id)}
-                            disabled={processing === w.id}
+                            disabled={processingAction !== null}
                           >
-                            <Check className="w-4 h-4 mr-1" />
-                            Approve
+                            {processingAction?.id === w.id && processingAction?.action === "approve" ? (
+                              <>
+                                <div className="w-4 h-4 mr-1 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Approving...
+                              </>
+                            ) : (
+                              <>
+                                <Check className="w-4 h-4 mr-1" />
+                                Approve
+                              </>
+                            )}
                           </Button>
                           <Button
                             size="sm"
                             variant="destructive"
                             onClick={() => handleReject(w.id)}
-                            disabled={processing === w.id}
+                            disabled={processingAction !== null}
                           >
-                            <X className="w-4 h-4 mr-1" />
-                            Reject
+                            {processingAction?.id === w.id && processingAction?.action === "reject" ? (
+                              <>
+                                <div className="w-4 h-4 mr-1 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Rejecting...
+                              </>
+                            ) : (
+                              <>
+                                <X className="w-4 h-4 mr-1" />
+                                Reject
+                              </>
+                            )}
                           </Button>
                         </div>
                       )}
