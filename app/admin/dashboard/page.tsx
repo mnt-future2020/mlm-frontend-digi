@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Users, TrendingUp, DollarSign, LayoutDashboard, AlertCircle, Package } from "lucide-react";
+import { Users, TrendingUp, DollarSign, LayoutDashboard, AlertCircle, Package, Wallet } from "lucide-react";
 import { PageContainer, PageHeader, StatsCard } from "@/components/ui/page-components";
 import { useAuth } from "@/contexts/auth-context";
 import { axiosInstance } from "@/lib/api";
@@ -13,6 +13,8 @@ interface DashboardStats {
     inactiveUsers: number;
     withPlans: number;
     totalEarnings: number;
+    totalRevenue: number;
+    netProfit: number;
     totalWithdrawals: number;
     pendingWithdrawals: number;
     pendingWithdrawalsAmount: number;
@@ -90,11 +92,14 @@ export default function AdminDashboard() {
           trend={{ value: "Active memberships", isPositive: true }}
         />
         <StatsCard
-          label="Total Earnings"
-          value={`₹${stats?.overview?.totalEarnings || 0}`}
-          icon={<DollarSign className="w-6 h-6 text-blue-600" />}
-          gradient="bg-blue-500"
-          trend={{ value: `Withdrawals: ₹${stats?.overview?.totalWithdrawals || 0}`, isPositive: true }}
+          label="Net Profit"
+          value={`₹${(stats?.overview?.netProfit || 0).toLocaleString()}`}
+          icon={<Wallet className="w-6 h-6 text-emerald-600" />}
+          gradient="bg-emerald-500"
+          trend={{ 
+            value: `Revenue: ₹${(stats?.overview?.totalRevenue || 0).toLocaleString()}`, 
+            isPositive: (stats?.overview?.netProfit || 0) > 0 
+          }}
         />
       </div>
 

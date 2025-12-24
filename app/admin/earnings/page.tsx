@@ -1,8 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TrendingUp, Download, DollarSign, Package, BarChart3, Calendar, Clock, Wallet, Activity, Users, CreditCard } from "lucide-react";
-import { PageContainer, PageHeader, StatsCard } from "@/components/ui/page-components";
+import {
+  TrendingUp,
+  Download,
+  DollarSign,
+  Package,
+  BarChart3,
+  Calendar,
+  Clock,
+  Wallet,
+  Activity,
+  Users,
+  CreditCard,
+} from "lucide-react";
+import {
+  PageContainer,
+  PageHeader,
+  StatsCard,
+} from "@/components/ui/page-components";
 import { Button } from "@/components/ui/button";
 import { axiosInstance } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -41,14 +57,14 @@ interface AdminEarnings {
 // Helper function to format date in IST
 const formatDateIST = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toLocaleString('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
+  return date.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
   });
 };
 
@@ -72,17 +88,33 @@ export default function AdminEarningsPage() {
   const [thisMonthRevenue, setThisMonthRevenue] = useState(0);
 
   // Admin Personal
-  const [adminPV, setAdminPV] = useState<AdminPV>({ leftPV: 0, rightPV: 0, totalPV: 0, matchablePV: 0 });
-  const [adminWallet, setAdminWallet] = useState<AdminWallet>({ balance: 0, totalEarnings: 0, totalWithdrawals: 0 });
-  const [adminEarnings, setAdminEarnings] = useState<AdminEarnings>({ MATCHING_INCOME: 0, REFERRAL_INCOME: 0, LEVEL_INCOME: 0, TOTAL: 0 });
+  const [adminPV, setAdminPV] = useState<AdminPV>({
+    leftPV: 0,
+    rightPV: 0,
+    totalPV: 0,
+    matchablePV: 0,
+  });
+  const [adminWallet, setAdminWallet] = useState<AdminWallet>({
+    balance: 0,
+    totalEarnings: 0,
+    totalWithdrawals: 0,
+  });
+  const [adminEarnings, setAdminEarnings] = useState<AdminEarnings>({
+    MATCHING_INCOME: 0,
+    REFERRAL_INCOME: 0,
+    LEVEL_INCOME: 0,
+    TOTAL: 0,
+  });
 
   // Transactions
-  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>(
+    []
+  );
 
   useEffect(() => {
     const fetchEarnings = async () => {
       try {
-        const response = await axiosInstance.get('/api/admin/earnings');
+        const response = await axiosInstance.get("/api/admin/earnings");
         if (response.data.success) {
           const data = response.data.data;
 
@@ -103,9 +135,29 @@ export default function AdminEarningsPage() {
           setThisMonthRevenue(data.monthRevenue || 0);
 
           // Admin personal
-          setAdminPV(data.adminPV || { leftPV: 0, rightPV: 0, totalPV: 0, matchablePV: 0 });
-          setAdminWallet(data.adminWallet || { balance: 0, totalEarnings: 0, totalWithdrawals: 0 });
-          setAdminEarnings(data.adminEarnings || { MATCHING_INCOME: 0, REFERRAL_INCOME: 0, LEVEL_INCOME: 0, TOTAL: 0 });
+          setAdminPV(
+            data.adminPV || {
+              leftPV: 0,
+              rightPV: 0,
+              totalPV: 0,
+              matchablePV: 0,
+            }
+          );
+          setAdminWallet(
+            data.adminWallet || {
+              balance: 0,
+              totalEarnings: 0,
+              totalWithdrawals: 0,
+            }
+          );
+          setAdminEarnings(
+            data.adminEarnings || {
+              MATCHING_INCOME: 0,
+              REFERRAL_INCOME: 0,
+              LEVEL_INCOME: 0,
+              TOTAL: 0,
+            }
+          );
 
           // Transactions
           setRecentTransactions(data.recentTransactions || []);
@@ -156,7 +208,10 @@ export default function AdminEarningsPage() {
             value={`₹${totalRevenue.toLocaleString()}`}
             icon={<TrendingUp className="w-6 h-6 text-green-600" />}
             gradient="bg-green-500"
-            trend={{ value: `${totalActivations} activations`, isPositive: true }}
+            trend={{
+              value: `${totalActivations} activations`,
+              isPositive: true,
+            }}
           />
           <StatsCard
             label="Net Profit"
@@ -182,22 +237,34 @@ export default function AdminEarningsPage() {
         </div>
       </div>
 
-      {/* ============ TOTAL PAYOUTS TO USERS ============ */}
+      {/* ============ USER INCOME DISTRIBUTED (PENDING LIABILITY) ============ */}
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
           <CreditCard className="w-5 h-5 text-orange-600" />
-          Total Payouts to Users
+          User Income Distributed (Pending Withdrawals)
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-xl p-5">
-            <p className="text-sm text-orange-700 font-medium mb-2">Total Payouts</p>
-            <p className="text-2xl font-bold text-orange-900">₹{totalPayouts.toLocaleString()}</p>
-            <p className="text-xs text-orange-600 mt-1">All income paid to users</p>
+            <p className="text-sm text-orange-700 font-medium mb-2">
+              Approved Withdrawals
+            </p>
+            <p className="text-2xl font-bold text-orange-900">
+              ₹{totalPayouts.toLocaleString()}
+            </p>
+            <p className="text-xs text-orange-600 mt-1">
+              Actual money paid out
+            </p>
           </div>
           <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-5">
-            <p className="text-sm text-purple-700 font-medium mb-2">Matching Income Paid</p>
-            <p className="text-2xl font-bold text-purple-900">₹{matchingIncomePaid.toLocaleString()}</p>
-            <p className="text-xs text-purple-600 mt-1">Binary PV matching</p>
+            <p className="text-sm text-purple-700 font-medium mb-2">
+              Matching Income Credited
+            </p>
+            <p className="text-2xl font-bold text-purple-900">
+              ₹{matchingIncomePaid.toLocaleString()}
+            </p>
+            <p className="text-xs text-purple-600 mt-1">
+              In user wallets (not yet withdrawn)
+            </p>
           </div>
           {/* <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-5">
             <p className="text-sm text-blue-700 font-medium mb-2">Referral Income Paid</p>
@@ -205,9 +272,15 @@ export default function AdminEarningsPage() {
             <p className="text-xs text-blue-600 mt-1">Direct referral bonus</p>
           </div> */}
           <div className="bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200 rounded-xl p-5">
-            <p className="text-sm text-teal-700 font-medium mb-2">Level Income Paid</p>
-            <p className="text-2xl font-bold text-teal-900">₹{levelIncomePaid.toLocaleString()}</p>
-            <p className="text-xs text-teal-600 mt-1">Level-based income</p>
+            <p className="text-sm text-teal-700 font-medium mb-2">
+              Level Income Credited
+            </p>
+            <p className="text-2xl font-bold text-teal-900">
+              ₹{levelIncomePaid.toLocaleString()}
+            </p>
+            <p className="text-xs text-teal-600 mt-1">
+              In user wallets (not yet withdrawn)
+            </p>
           </div>
         </div>
       </div>
@@ -221,15 +294,21 @@ export default function AdminEarningsPage() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
             <p className="text-white/70 text-sm mb-1">Wallet Balance</p>
-            <p className="text-2xl font-bold">₹{adminWallet.balance.toLocaleString()}</p>
+            <p className="text-2xl font-bold">
+              ₹{adminWallet.balance.toLocaleString()}
+            </p>
           </div>
           <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
             <p className="text-white/70 text-sm mb-1">Total Earnings</p>
-            <p className="text-2xl font-bold">₹{adminWallet.totalEarnings.toLocaleString()}</p>
+            <p className="text-2xl font-bold">
+              ₹{adminWallet.totalEarnings.toLocaleString()}
+            </p>
           </div>
           <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
             <p className="text-white/70 text-sm mb-1">Matching Income</p>
-            <p className="text-2xl font-bold">₹{adminEarnings.MATCHING_INCOME.toLocaleString()}</p>
+            <p className="text-2xl font-bold">
+              ₹{adminEarnings.MATCHING_INCOME.toLocaleString()}
+            </p>
           </div>
           {/* <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
             <p className="text-white/70 text-sm mb-1">Referral Income</p>
@@ -237,7 +316,9 @@ export default function AdminEarningsPage() {
           </div> */}
           <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
             <p className="text-white/70 text-sm mb-1">Level Income</p>
-            <p className="text-2xl font-bold">₹{adminEarnings.LEVEL_INCOME.toLocaleString()}</p>
+            <p className="text-2xl font-bold">
+              ₹{adminEarnings.LEVEL_INCOME.toLocaleString()}
+            </p>
           </div>
         </div>
       </div>
@@ -280,8 +361,12 @@ export default function AdminEarningsPage() {
               key={planName}
               className="bg-gradient-to-br from-primary-50 to-primary-100 border border-primary-200 rounded-xl p-5"
             >
-              <p className="text-sm text-primary-700 font-medium mb-2">{planName} Plan</p>
-              <p className="text-2xl font-bold text-primary-900">₹{amount.toLocaleString()}</p>
+              <p className="text-sm text-primary-700 font-medium mb-2">
+                {planName} Plan
+              </p>
+              <p className="text-2xl font-bold text-primary-900">
+                ₹{amount.toLocaleString()}
+              </p>
             </div>
           ))}
           {Object.keys(incomeByPlan).length === 0 && (
@@ -294,22 +379,38 @@ export default function AdminEarningsPage() {
 
       {/* ============ PROFIT SUMMARY ============ */}
       <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6 mb-8">
-        <h3 className="text-lg font-semibold text-green-900 mb-4">Profit Summary</h3>
+        <h3 className="text-lg font-semibold text-green-900 mb-4">
+          Profit Summary
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center p-4 bg-white/60 rounded-lg">
             <p className="text-sm text-green-600 mb-1">Total Revenue</p>
-            <p className="text-2xl font-bold text-green-800">₹{totalRevenue.toLocaleString()}</p>
-            <p className="text-xs text-green-600 mt-1">From all plan activations</p>
+            <p className="text-2xl font-bold text-green-800">
+              ₹{totalRevenue.toLocaleString()}
+            </p>
+            <p className="text-xs text-green-600 mt-1">
+              From all plan activations
+            </p>
           </div>
           <div className="text-center p-4 bg-white/60 rounded-lg">
-            <p className="text-sm text-orange-600 mb-1">Total Payouts</p>
-            <p className="text-2xl font-bold text-orange-800">- ₹{totalPayouts.toLocaleString()}</p>
-            <p className="text-xs text-orange-600 mt-1">All income paid to users</p>
+            <p className="text-sm text-orange-600 mb-1">Approved Withdrawals</p>
+            <p className="text-2xl font-bold text-orange-800">
+              - ₹{totalPayouts.toLocaleString()}
+            </p>
+            <p className="text-xs text-orange-600 mt-1">
+              Actual money paid out
+            </p>
           </div>
           <div className="text-center p-4 bg-green-100/60 rounded-lg border-2 border-green-300">
-            <p className="text-sm text-green-700 mb-1 font-medium">Net Profit</p>
-            <p className="text-3xl font-bold text-green-900">₹{netProfit.toLocaleString()}</p>
-            <p className="text-xs text-green-700 mt-1">Platform earnings</p>
+            <p className="text-sm text-green-700 mb-1 font-medium">
+              Net Profit
+            </p>
+            <p className="text-3xl font-bold text-green-900">
+              ₹{netProfit.toLocaleString()}
+            </p>
+            <p className="text-xs text-green-700 mt-1">
+              Revenue - Approved Withdrawals
+            </p>
           </div>
         </div>
       </div>
@@ -321,43 +422,71 @@ export default function AdminEarningsPage() {
             <TrendingUp className="w-5 h-5 text-primary-600" />
             Recent Transactions
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">All income types - Plan activations, Matching, Referral, Level</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Plan activations, Admin matching income, Approved withdrawals
+          </p>
         </div>
         <div className="divide-y divide-border max-h-[600px] overflow-y-auto">
           {recentTransactions.length > 0 ? (
             recentTransactions.map((transaction) => {
               const getTypeIcon = () => {
                 switch (transaction.type) {
-                  case 'MATCHING_INCOME': return '🤝';
-                  case 'PLAN_ACTIVATION': return '💰';
-                  case 'REFERRAL_INCOME': return '👥';
-                  case 'LEVEL_INCOME': return '📊';
-                  default: return '💵';
+                  case "MATCHING_INCOME":
+                    return "🤝";
+                  case "PLAN_ACTIVATION":
+                    return "💰";
+                  case "REFERRAL_INCOME":
+                    return "👥";
+                  case "LEVEL_INCOME":
+                    return "📊";
+                  case "WITHDRAWAL_APPROVED":
+                    return "💸";
+                  default:
+                    return "💵";
                 }
               };
 
               const getTypeColor = () => {
                 switch (transaction.type) {
-                  case 'MATCHING_INCOME': return 'bg-purple-100 text-purple-700';
-                  case 'PLAN_ACTIVATION': return 'bg-green-100 text-green-700';
-                  case 'REFERRAL_INCOME': return 'bg-blue-100 text-blue-700';
-                  case 'LEVEL_INCOME': return 'bg-teal-100 text-teal-700';
-                  default: return 'bg-gray-100 text-gray-700';
+                  case "MATCHING_INCOME":
+                    return "bg-purple-100 text-purple-700";
+                  case "PLAN_ACTIVATION":
+                    return "bg-green-100 text-green-700";
+                  case "REFERRAL_INCOME":
+                    return "bg-blue-100 text-blue-700";
+                  case "LEVEL_INCOME":
+                    return "bg-teal-100 text-teal-700";
+                  case "WITHDRAWAL_APPROVED":
+                    return "bg-red-100 text-red-700";
+                  default:
+                    return "bg-gray-100 text-gray-700";
                 }
               };
 
               const getTypeLabel = () => {
                 switch (transaction.type) {
-                  case 'MATCHING_INCOME': return 'Matching Income';
-                  case 'PLAN_ACTIVATION': return 'Plan Activation';
-                  case 'REFERRAL_INCOME': return 'Referral Income';
-                  case 'LEVEL_INCOME': return 'Level Income';
-                  default: return transaction.type.replace(/_/g, ' ');
+                  case "MATCHING_INCOME":
+                    return "Matching Income";
+                  case "PLAN_ACTIVATION":
+                    return "Plan Activation";
+                  case "REFERRAL_INCOME":
+                    return "Referral Income";
+                  case "LEVEL_INCOME":
+                    return "Level Income";
+                  case "WITHDRAWAL_APPROVED":
+                    return "Withdrawal Paid";
+                  default:
+                    return transaction.type.replace(/_/g, " ");
                 }
               };
 
-              const isRevenue = transaction.type === 'PLAN_ACTIVATION' ||
-                (transaction.isAdminTransaction && (transaction.type === 'MATCHING_INCOME' || transaction.type === 'MATCHING_BONUS'));
+              // Revenue: Plan Activation, Admin's Matching Income
+              // Payout: Approved Withdrawals
+              const isRevenue =
+                transaction.type === "PLAN_ACTIVATION" ||
+                (transaction.isAdminTransaction &&
+                  transaction.type === "MATCHING_INCOME");
+              const isPayout = transaction.type === "WITHDRAWAL_APPROVED";
 
               return (
                 <div
@@ -376,7 +505,12 @@ export default function AdminEarningsPage() {
                             <h3 className="font-semibold text-foreground">
                               {getTypeLabel()}
                             </h3>
-                            <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", getTypeColor())}>
+                            <span
+                              className={cn(
+                                "px-2 py-0.5 rounded-full text-xs font-medium",
+                                getTypeColor()
+                              )}
+                            >
                               {transaction.userName}
                             </span>
                             {transaction.isAdminTransaction && (
@@ -398,17 +532,22 @@ export default function AdminEarningsPage() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className={cn(
-                        "text-2xl font-bold",
-                        isRevenue ? "text-green-600" : "text-orange-600"
-                      )}>
-                        {isRevenue ? '+' : '-'}₹{transaction.amount.toLocaleString()}
+                      <p
+                        className={cn(
+                          "text-2xl font-bold",
+                          isPayout ? "text-red-600" : "text-green-600"
+                        )}
+                      >
+                        {isPayout ? "-" : "+"}₹
+                        {transaction.amount.toLocaleString()}
                       </p>
-                      <span className={cn(
-                        "text-xs",
-                        isRevenue ? "text-green-600" : "text-orange-600"
-                      )}>
-                        {isRevenue ? 'Revenue' : 'Payout'}
+                      <span
+                        className={cn(
+                          "text-xs",
+                          isPayout ? "text-red-600" : "text-green-600"
+                        )}
+                      >
+                        {isPayout ? "Payout" : "Revenue"}
                       </span>
                     </div>
                   </div>
@@ -418,7 +557,9 @@ export default function AdminEarningsPage() {
           ) : (
             <div className="p-12 text-center">
               <DollarSign className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">No Transactions Yet</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                No Transactions Yet
+              </h3>
               <p className="text-muted-foreground">
                 Revenue and payouts will appear here as users join and earn
               </p>

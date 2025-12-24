@@ -52,8 +52,12 @@ export default function ManageTopupsPage() {
   const { user } = useAuth();
   const [topups, setTopups] = useState<TopupRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processingApproval, setProcessingApproval] = useState<string | null>(null);
-  const [processingRejection, setProcessingRejection] = useState<string | null>(null);
+  const [processingApproval, setProcessingApproval] = useState<string | null>(
+    null
+  );
+  const [processingRejection, setProcessingRejection] = useState<string | null>(
+    null
+  );
   const [statusFilter, setStatusFilter] = useState<string>("PENDING");
   const [selectedRequest, setSelectedRequest] = useState<TopupRequest | null>(
     null
@@ -97,7 +101,7 @@ export default function ManageTopupsPage() {
 
   const handleApprove = async (topupId: string) => {
     if (processingApproval === topupId) return; // Prevent double-click
-    
+
     setProcessingApproval(topupId);
     try {
       const response = await axiosInstance.post(
@@ -115,10 +119,11 @@ export default function ManageTopupsPage() {
       }
     } catch (error: any) {
       console.error("Approval error:", error);
-      const errorMessage = error.response?.data?.detail || 
-                          error.response?.data?.message || 
-                          error.message ||
-                          "Failed to approve topup";
+      const errorMessage =
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to approve topup";
       toast.error(errorMessage);
     } finally {
       setProcessingApproval(null);
@@ -127,7 +132,7 @@ export default function ManageTopupsPage() {
 
   const handleReject = async (topupId: string) => {
     if (processingRejection === topupId) return; // Prevent double-click
-    
+
     setProcessingRejection(topupId);
     try {
       const response = await axiosInstance.post(
@@ -147,10 +152,11 @@ export default function ManageTopupsPage() {
       }
     } catch (error: any) {
       console.error("Rejection error:", error);
-      const errorMessage = error.response?.data?.detail || 
-                          error.response?.data?.message || 
-                          error.message ||
-                          "Failed to reject topup";
+      const errorMessage =
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to reject topup";
       toast.error(errorMessage);
     } finally {
       setProcessingRejection(null);

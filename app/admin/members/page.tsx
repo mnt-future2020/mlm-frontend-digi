@@ -65,6 +65,11 @@ export default function ManageMembersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalMembers, setTotalMembers] = useState(0);
+  const pageSize = 20; // Members per page
+
   // Dialog states
   const [viewDialog, setViewDialog] = useState(false);
   const [editDialog, setEditDialog] = useState(false);
@@ -87,37 +92,44 @@ export default function ManageMembersPage() {
       accountName: "",
       accountNumber: "",
       ifsc: "",
-      bankName: ""
-    }
+      bankName: "",
+    },
   });
 
   // Password reset state
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const fetchMembers = useCallback(async (search?: string) => {
-    try {
-      setLoading(true);
-      const params: any = {
-        limit: 50,
-        skip: 0,
-      };
+  const fetchMembers = useCallback(
+    async (search?: string, page: number = 1) => {
+      try {
+        setLoading(true);
+        const skip = (page - 1) * pageSize;
+        const params: any = {
+          limit: pageSize,
+          skip: skip,
+        };
 
-      if (search) {
-        params.search = search;
-      }
+        if (search) {
+          params.search = search;
+        }
 
-      const response = await axiosInstance.get("/api/admin/users", { params });
-      if (response.data.success) {
-        setMembers(response.data.data);
+        const response = await axiosInstance.get("/api/admin/users", {
+          params,
+        });
+        if (response.data.success) {
+          setMembers(response.data.data);
+          setTotalMembers(response.data.total || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching members:", error);
+        toast.error("Failed to fetch members");
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching members:", error);
-      toast.error("Failed to fetch members");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [pageSize]
+  );
 
   const fetchPlans = useCallback(async () => {
     try {
@@ -132,21 +144,33 @@ export default function ManageMembersPage() {
 
   useEffect(() => {
     if (user && user.role === "admin") {
-      fetchMembers();
+      fetchMembers("", currentPage);
       fetchPlans();
     }
-  }, [user, fetchMembers, fetchPlans]);
+  }, [user, fetchMembers, fetchPlans, currentPage]);
 
-  // Debounced search
+  // Debounced search - reset to page 1 when searching
   useEffect(() => {
     const delaySearch = setTimeout(() => {
       if (searchTerm !== undefined) {
-        fetchMembers(searchTerm);
+        setCurrentPage(1);
+        fetchMembers(searchTerm, 1);
       }
     }, 500); // 500ms delay after user stops typing
 
     return () => clearTimeout(delaySearch);
   }, [searchTerm, fetchMembers]);
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    fetchMembers(searchTerm, page);
+  };
+
+  // Calculate pagination info
+  const totalPages = Math.ceil(totalMembers / pageSize);
+  const startIndex = (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, totalMembers);
 
   // View member details
   const [viewMemberDetails, setViewMemberDetails] = useState<any>(null);
@@ -188,19 +212,21 @@ export default function ManageMembersPage() {
         accountName: "",
         accountNumber: "",
         ifsc: "",
-        bankName: ""
-      }
+        bankName: "",
+      },
     });
     setEditDialog(true);
 
     // Fetch full details to get KYC info
     try {
-      const response = await axiosInstance.get(`/api/user/details/${member.referralId}`);
+      const response = await axiosInstance.get(
+        `/api/user/details/${member.referralId}`
+      );
       if (response.data.success) {
         const details = response.data.data;
         const kyc = details.kycData || {};
 
-        setEditForm(prev => ({
+        setEditForm((prev) => ({
           ...prev,
           name: details.name || prev.name,
           email: details.email || prev.email,
@@ -214,8 +240,8 @@ export default function ManageMembersPage() {
             accountName: "",
             accountNumber: "",
             ifsc: "",
-            bankName: ""
-          }
+            bankName: "",
+          },
         }));
       }
     } catch (error) {
@@ -236,7 +262,7 @@ export default function ManageMembersPage() {
       if (response.data.success) {
         toast.success("Member updated successfully");
         setEditDialog(false);
-        fetchMembers();
+        fetchMembers(searchTerm, currentPage);
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to update member");
@@ -257,10 +283,11 @@ export default function ManageMembersPage() {
       );
       if (response.data.success) {
         toast.success(
-          `Member ${!member.isActive ? "activated" : "deactivated"
+          `Member ${
+            !member.isActive ? "activated" : "deactivated"
           } successfully`
         );
-        fetchMembers();
+        fetchMembers(searchTerm, currentPage);
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to update status");
@@ -328,7 +355,7 @@ export default function ManageMembersPage() {
       if (response.data.success) {
         toast.success("Member deleted successfully");
         setDeleteDialog(false);
-        fetchMembers();
+        fetchMembers(searchTerm, currentPage);
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to delete member");
@@ -382,7 +409,7 @@ export default function ManageMembersPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatsCard
           label="Total Members"
-          value={String(members.length)}
+          value={String(totalMembers)}
           icon={<Users className="w-6 h-6 text-blue-600" />}
           gradient="bg-blue-500"
         />
@@ -391,18 +418,21 @@ export default function ManageMembersPage() {
           value={String(members.filter((m) => m.isActive).length)}
           icon={<CheckCircle className="w-6 h-6 text-green-600" />}
           gradient="bg-green-500"
+          trend={{ value: "On this page", isPositive: true }}
         />
         <StatsCard
           label="Inactive Members"
           value={String(members.filter((m) => !m.isActive).length)}
           icon={<XCircle className="w-6 h-6 text-red-600" />}
           gradient="bg-red-500"
+          trend={{ value: "On this page", isPositive: false }}
         />
         <StatsCard
           label="With Plans"
           value={String(members.filter((m) => m.currentPlan).length)}
           icon={<CheckCircle className="w-6 h-6 text-purple-600" />}
           gradient="bg-purple-500"
+          trend={{ value: "On this page", isPositive: true }}
         />
       </div>
 
@@ -523,12 +553,15 @@ export default function ManageMembersPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-xs text-muted-foreground">
-                        {new Date(member.createdAt).toLocaleDateString("en-IN", {
-                          timeZone: 'Asia/Kolkata',
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })}
+                        {new Date(member.createdAt).toLocaleDateString(
+                          "en-IN",
+                          {
+                            timeZone: "Asia/Kolkata",
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -590,11 +623,72 @@ export default function ManageMembersPage() {
         </div>
 
         {/* Pagination */}
-        {filteredMembers.length > 0 && (
+        {totalMembers > 0 && (
           <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/20">
             <p className="text-sm text-muted-foreground">
-              Showing {filteredMembers.length} of {members.length} members
+              Showing {startIndex} to {endIndex} of {totalMembers} members
             </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(1)}
+                disabled={currentPage === 1 || loading}
+              >
+                First
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1 || loading}
+              >
+                Previous
+              </Button>
+              <div className="flex items-center gap-1">
+                {/* Show page numbers */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handlePageChange(pageNum)}
+                      disabled={loading}
+                      className="w-9"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages || loading}
+              >
+                Next
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(totalPages)}
+                disabled={currentPage === totalPages || loading}
+              >
+                Last
+              </Button>
+            </div>
           </div>
         )}
       </div>
@@ -836,9 +930,7 @@ export default function ManageMembersPage() {
                     </p>
                   </div>
                   <div>
-                    <Label className="text-xs text-purple-700">
-                      Plan PV
-                    </Label>
+                    <Label className="text-xs text-purple-700">Plan PV</Label>
                     <p className="text-lg font-bold text-purple-900">
                       {viewMemberDetails.pv.planPV || 0}
                     </p>
@@ -889,8 +981,10 @@ export default function ManageMembersPage() {
                     </Label>
                     <p className="text-sm font-medium">
                       {new Date(viewMemberDetails.joinedAt).toLocaleString(
-                        "en-IN", { timeZone: 'Asia/Kolkata' }
-                      )} IST
+                        "en-IN",
+                        { timeZone: "Asia/Kolkata" }
+                      )}{" "}
+                      IST
                     </p>
                   </div>
                   <div>
@@ -899,8 +993,10 @@ export default function ManageMembersPage() {
                     </Label>
                     <p className="text-sm font-medium">
                       {new Date(viewMemberDetails.lastActive).toLocaleString(
-                        "en-IN", { timeZone: 'Asia/Kolkata' }
-                      )} IST
+                        "en-IN",
+                        { timeZone: "Asia/Kolkata" }
+                      )}{" "}
+                      IST
                     </p>
                   </div>
                 </div>
@@ -1023,7 +1119,9 @@ export default function ManageMembersPage() {
             </div>
 
             <div className="space-y-4 border-t pt-4">
-              <h4 className="font-medium text-sm text-muted-foreground">Bank Details</h4>
+              <h4 className="font-medium text-sm text-muted-foreground">
+                Bank Details
+              </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Account Name</Label>
@@ -1032,7 +1130,7 @@ export default function ManageMembersPage() {
                     onChange={(e) =>
                       setEditForm({
                         ...editForm,
-                        bank: { ...editForm.bank, accountName: e.target.value }
+                        bank: { ...editForm.bank, accountName: e.target.value },
                       })
                     }
                     placeholder="Account Holder"
@@ -1045,7 +1143,10 @@ export default function ManageMembersPage() {
                     onChange={(e) =>
                       setEditForm({
                         ...editForm,
-                        bank: { ...editForm.bank, accountNumber: e.target.value }
+                        bank: {
+                          ...editForm.bank,
+                          accountNumber: e.target.value,
+                        },
                       })
                     }
                     placeholder="Account Number"
@@ -1058,7 +1159,7 @@ export default function ManageMembersPage() {
                     onChange={(e) =>
                       setEditForm({
                         ...editForm,
-                        bank: { ...editForm.bank, ifsc: e.target.value }
+                        bank: { ...editForm.bank, ifsc: e.target.value },
                       })
                     }
                     placeholder="IFSC Code"
@@ -1071,7 +1172,7 @@ export default function ManageMembersPage() {
                     onChange={(e) =>
                       setEditForm({
                         ...editForm,
-                        bank: { ...editForm.bank, bankName: e.target.value }
+                        bank: { ...editForm.bank, bankName: e.target.value },
                       })
                     }
                     placeholder="Bank Name"
