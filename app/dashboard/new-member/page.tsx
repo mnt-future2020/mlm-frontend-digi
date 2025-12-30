@@ -1,7 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UserPlus, Search, Loader2, CheckCircle, Copy, X, Users, CreditCard, User, Smartphone, Mail, Lock } from "lucide-react";
+import {
+  UserPlus,
+  Search,
+  Loader2,
+  CheckCircle,
+  Copy,
+  X,
+  Users,
+  CreditCard,
+  User,
+  Smartphone,
+  Mail,
+  Lock,
+  Infinity,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -13,7 +27,13 @@ import {
 } from "@/components/ui/select";
 import { PageContainer, PageHeader } from "@/components/ui/page-components";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { axiosInstance } from "@/lib/api";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-context";
@@ -79,7 +99,7 @@ export default function NewMemberPage() {
 
       if (response.data.success) {
         const sponsor = response.data.data;
-        setFormData(prev => ({ ...prev, sponsorName: sponsor.name }));
+        setFormData((prev) => ({ ...prev, sponsorName: sponsor.name }));
         if (!sponsorIdToSearch) {
           toast.success("Sponsor found!");
         }
@@ -88,11 +108,11 @@ export default function NewMemberPage() {
         toast.error(
           typeof errorMessage === "string" ? errorMessage : "Sponsor not found"
         );
-        setFormData(prev => ({ ...prev, sponsorName: "" }));
+        setFormData((prev) => ({ ...prev, sponsorName: "" }));
       }
     } catch (error) {
       toast.error("Error finding sponsor");
-      setFormData(prev => ({ ...prev, sponsorName: "" }));
+      setFormData((prev) => ({ ...prev, sponsorName: "" }));
     } finally {
       setSearchingSponsor(false);
     }
@@ -156,7 +176,10 @@ export default function NewMemberPage() {
           username: formData.username,
           referralId: response.data.user.referralId,
           password: formData.password,
-          planName: formData.planId !== "no-plan" ? plans.find(p => p.id === formData.planId)?.name : null
+          planName:
+            formData.planId !== "no-plan"
+              ? plans.find((p) => p.id === formData.planId)?.name
+              : null,
         });
         setShowWelcomeModal(true);
         handleReset();
@@ -190,7 +213,6 @@ export default function NewMemberPage() {
     });
   };
 
-
   const [placementPreview, setPlacementPreview] = useState<any>(null);
 
   // Preview placement when sponsor or placement changes
@@ -202,10 +224,13 @@ export default function NewMemberPage() {
       }
 
       try {
-        const response = await axiosInstance.post("/api/auth/preview-placement", {
-          referralId: formData.sponsorId,
-          placement: formData.placement
-        });
+        const response = await axiosInstance.post(
+          "/api/auth/preview-placement",
+          {
+            referralId: formData.sponsorId,
+            placement: formData.placement,
+          }
+        );
 
         if (response.data.success) {
           setPlacementPreview(response.data.data);
@@ -235,7 +260,6 @@ export default function NewMemberPage() {
       />
 
       <form onSubmit={handleSubmit} className="space-y-6">
-
         {/* 1. Personal Information */}
         <Card className="border-border shadow-sm">
           <CardHeader>
@@ -245,7 +269,9 @@ export default function NewMemberPage() {
               </div>
               <div>
                 <CardTitle className="text-lg">Personal Details</CardTitle>
-                <CardDescription>Enter the new member's personal information</CardDescription>
+                <CardDescription>
+                  Enter the new member's personal information
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -255,7 +281,9 @@ export default function NewMemberPage() {
               <Input
                 placeholder="Enter full name"
                 value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, fullName: e.target.value })
+                }
                 required
               />
             </div>
@@ -264,7 +292,9 @@ export default function NewMemberPage() {
               <Label required>Gender</Label>
               <Select
                 value={formData.gender}
-                onValueChange={(value) => setFormData({ ...formData, gender: value })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, gender: value })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select gender" />
@@ -286,7 +316,9 @@ export default function NewMemberPage() {
                   className="pl-9"
                   placeholder="Enter mobile number"
                   value={formData.mobile}
-                  onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, mobile: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -301,7 +333,9 @@ export default function NewMemberPage() {
                   className="pl-9"
                   placeholder="Enter email address"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -317,7 +351,9 @@ export default function NewMemberPage() {
               </div>
               <div>
                 <CardTitle className="text-lg">Login Credentials</CardTitle>
-                <CardDescription>Set up the account access details</CardDescription>
+                <CardDescription>
+                  Set up the account access details
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -327,7 +363,9 @@ export default function NewMemberPage() {
               <Input
                 placeholder="Unique username"
                 value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, username: e.target.value })
+                }
                 required
               />
             </div>
@@ -337,7 +375,9 @@ export default function NewMemberPage() {
                 type="password"
                 placeholder="Min 6 characters"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
                 required
               />
             </div>
@@ -347,13 +387,14 @@ export default function NewMemberPage() {
                 type="password"
                 placeholder="Retype password"
                 value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, confirmPassword: e.target.value })
+                }
                 required
               />
             </div>
           </CardContent>
         </Card>
-
 
         {/* 4. Sponsor & Placement (MOVED TO BOTTOM) */}
         <Card className="border-border shadow-sm bg-muted/10">
@@ -364,7 +405,9 @@ export default function NewMemberPage() {
               </div>
               <div>
                 <CardTitle className="text-lg">Sponsor & Placement</CardTitle>
-                <CardDescription>Define where this member goes in the structure</CardDescription>
+                <CardDescription>
+                  Define where this member goes in the structure
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -376,7 +419,9 @@ export default function NewMemberPage() {
                   <Input
                     placeholder="Enter Sponsor ID"
                     value={formData.sponsorId}
-                    onChange={(e) => setFormData({ ...formData, sponsorId: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, sponsorId: e.target.value })
+                    }
                     onBlur={handleSponsorIdBlur}
                     className="pr-10"
                   />
@@ -386,10 +431,16 @@ export default function NewMemberPage() {
                     disabled={searchingSponsor}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary-600 transition-colors"
                   >
-                    {searchingSponsor ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                    {searchingSponsor ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Search className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
-                <p className="text-[10px] text-muted-foreground">Default is your ID. Change to place under someone else.</p>
+                <p className="text-[10px] text-muted-foreground">
+                  Default is your ID. Change to place under someone else.
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -406,7 +457,9 @@ export default function NewMemberPage() {
                 <Label required>Placement Side</Label>
                 <Select
                   value={formData.placement}
-                  onValueChange={(value) => setFormData({ ...formData, placement: value })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, placement: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select placement" />
@@ -421,27 +474,59 @@ export default function NewMemberPage() {
 
             {/* Placement Preview */}
             {placementPreview && (
-              <div className={`mt-6 p-4 rounded-lg border flex items-start gap-3 ${placementPreview.is_direct_placement
-                  ? 'bg-green-50 border-green-200 text-green-900'
-                  : 'bg-indigo-50 border-indigo-200 text-indigo-900'
-                }`}>
-                <div className={`p-2 rounded-full ${placementPreview.is_direct_placement ? 'bg-green-100' : 'bg-indigo-100'}`}>
+              <div
+                className={`mt-6 p-4 rounded-lg border flex items-start gap-3 ${
+                  placementPreview.is_direct_placement
+                    ? "bg-green-50 border-green-200 text-green-900"
+                    : "bg-indigo-50 border-indigo-200 text-indigo-900"
+                }`}
+              >
+                <div
+                  className={`p-2 rounded-full ${
+                    placementPreview.is_direct_placement
+                      ? "bg-green-100"
+                      : "bg-indigo-100"
+                  }`}
+                >
                   {placementPreview.is_direct_placement ? (
-                    <UserPlus className={`w-5 h-5 ${placementPreview.is_direct_placement ? 'text-green-600' : 'text-indigo-600'}`} />
+                    <UserPlus
+                      className={`w-5 h-5 ${
+                        placementPreview.is_direct_placement
+                          ? "text-green-600"
+                          : "text-indigo-600"
+                      }`}
+                    />
                   ) : (
-                    <Search className={`w-5 h-5 ${placementPreview.is_direct_placement ? 'text-green-600' : 'text-indigo-600'}`} />
+                    <Search
+                      className={`w-5 h-5 ${
+                        placementPreview.is_direct_placement
+                          ? "text-green-600"
+                          : "text-indigo-600"
+                      }`}
+                    />
                   )}
                 </div>
                 <div>
                   <h4 className="font-semibold text-sm mb-1">
-                    {placementPreview.is_direct_placement ? "Direct Placement Available" : "Auto-Placement Active"}
+                    {placementPreview.is_direct_placement
+                      ? "Direct Placement Available"
+                      : "Auto-Placement Active"}
                   </h4>
                   <p className="text-sm opacity-90">
-                    New member will be placed under <span className="font-bold">{placementPreview.actual_sponsor_name}</span> ({placementPreview.actual_sponsor_referral_id}) on the <span className="font-bold">{placementPreview.placement}</span> side.
+                    New member will be placed under{" "}
+                    <span className="font-bold">
+                      {placementPreview.actual_sponsor_name}
+                    </span>{" "}
+                    ({placementPreview.actual_sponsor_referral_id}) on the{" "}
+                    <span className="font-bold">
+                      {placementPreview.placement}
+                    </span>{" "}
+                    side.
                   </p>
                   {!placementPreview.is_direct_placement && (
                     <p className="text-xs mt-2 opacity-75">
-                      Note: Selected position was occupied. System found the next available spot.
+                      Note: Selected position was occupied. System found the
+                      next available spot.
                     </p>
                   )}
                 </div>
@@ -476,7 +561,6 @@ export default function NewMemberPage() {
             Reset Form
           </Button>
         </div>
-
       </form>
 
       {/* Welcome Modal */}
@@ -490,25 +574,38 @@ export default function NewMemberPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 rounded-t-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-10">
-                <UserPlus className="w-24 h-24 text-white" />
+            <div className="bg-white p-6 rounded-t-2xl relative overflow-hidden border-b border-border">
+              {/* Infinity symbol - top right decorative */}
+              <div className="absolute top-3 right-12">
+                <Infinity
+                  className="w-12 h-12 text-purple-500 opacity-60"
+                  strokeWidth={2}
+                />
               </div>
               <button
                 onClick={() => setShowWelcomeModal(false)}
-                className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-20"
               >
                 <X className="w-6 h-6" />
               </button>
               <div className="flex flex-col items-center text-center relative z-10">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-3 shadow-lg">
-                  <CheckCircle className="w-8 h-8 text-green-600" />
+                {/* Logo Image */}
+                <div className="w-32 h-32 flex items-center justify-center mb-4">
+                  <img
+                    src="/assets/images/logo/vsv.webp"
+                    alt="VSV Logo"
+                    className="w-full h-full object-contain"
+                  />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-1">
+                <h2 className="text-2xl font-bold text-gray-800 mb-1">
                   Registration Successful!
                 </h2>
-                <p className="text-green-50 text-sm">
-                  Welcome {newUserData.name} to the team
+                <p className="text-gray-500 text-sm">
+                  Welcome{" "}
+                  <span className="font-semibold text-purple-600">
+                    {newUserData.name}
+                  </span>{" "}
+                  to the team
                 </p>
               </div>
             </div>
@@ -516,46 +613,67 @@ export default function NewMemberPage() {
             {/* Content */}
             <div className="p-6 space-y-5">
               <div className="bg-muted/40 rounded-xl p-4 space-y-4 border border-border/50">
-
                 <div className="flex justify-between items-center pb-2 border-b border-border/50">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Username</span>
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Username
+                  </span>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-foreground">{newUserData.username}</span>
+                    <span className="font-mono font-bold text-foreground">
+                      {newUserData.username}
+                    </span>
                     <Copy
                       className="w-3.5 h-3.5 text-muted-foreground cursor-pointer hover:text-primary-600"
-                      onClick={() => { navigator.clipboard.writeText(newUserData.username); toast.success("Copied!"); }}
+                      onClick={() => {
+                        navigator.clipboard.writeText(newUserData.username);
+                        toast.success("Copied!");
+                      }}
                     />
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center pb-2 border-b border-border/50">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Referral ID</span>
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Referral ID
+                  </span>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-primary-600">{newUserData.referralId}</span>
+                    <span className="font-mono font-bold text-primary-600">
+                      {newUserData.referralId}
+                    </span>
                     <Copy
                       className="w-3.5 h-3.5 text-muted-foreground cursor-pointer hover:text-primary-600"
-                      onClick={() => { navigator.clipboard.writeText(newUserData.referralId); toast.success("Copied!"); }}
+                      onClick={() => {
+                        navigator.clipboard.writeText(newUserData.referralId);
+                        toast.success("Copied!");
+                      }}
                     />
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Password</span>
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Password
+                  </span>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold bg-muted px-2 py-1 rounded text-sm">{newUserData.password}</span>
+                    <span className="font-mono font-bold bg-muted px-2 py-1 rounded text-sm">
+                      {newUserData.password}
+                    </span>
                     <Copy
                       className="w-3.5 h-3.5 text-muted-foreground cursor-pointer hover:text-primary-600"
-                      onClick={() => { navigator.clipboard.writeText(newUserData.password); toast.success("Copied!"); }}
+                      onClick={() => {
+                        navigator.clipboard.writeText(newUserData.password);
+                        toast.success("Copied!");
+                      }}
                     />
                   </div>
                 </div>
-
               </div>
 
               <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 flex gap-3 items-start">
                 <Lock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-800 leading-relaxed">
-                  Please share these credentials securely with the new member immediately. For security, ask them to change their password after first login.
+                  Please share these credentials securely with the new member
+                  immediately. For security, ask them to change their password
+                  after first login.
                 </p>
               </div>
 

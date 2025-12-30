@@ -3,7 +3,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { axiosInstance } from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -20,7 +26,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  FileImage
+  FileImage,
 } from "lucide-react";
 
 interface KYCDetail {
@@ -32,7 +38,8 @@ interface KYCDetail {
     phone: string;
     address: string;
     dob: string;
-    idNumber: string;
+    idNumber?: string;
+    nomineeName?: string;
     sponsorReferralId: string;
     bank: {
       accountName: string;
@@ -41,7 +48,17 @@ interface KYCDetail {
       bankName: string;
     };
   };
-  idProofBase64: string;
+  // Cloudinary URLs for documents
+  panCardUrl?: string;
+  aadharCardUrl?: string;
+  bankPassbookUrl?: string;
+  profilePhotoUrl?: string;
+  // Legacy base64 fields (fallback)
+  idProofBase64?: string;
+  panCardBase64?: string;
+  aadharCardBase64?: string;
+  bankPassbookBase64?: string;
+  profilePhotoBase64?: string;
   status: string;
   remarks?: string;
   submittedBy: { userId: string; role: string };
@@ -59,7 +76,7 @@ export default function KYCDetailPage() {
   const params = useParams();
   const router = useRouter();
   const kycId = params.id as string;
-  
+
   const [loading, setLoading] = useState(true);
   const [kycDetail, setKycDetail] = useState<KYCDetail | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -89,7 +106,7 @@ export default function KYCDetailPage() {
     try {
       const response = await axiosInstance.post("/api/admin/kyc/approve", {
         kycId,
-        remarks
+        remarks,
       });
       if (response.data?.success) {
         toast.success(response.data.message || "KYC approved successfully!");
@@ -107,12 +124,12 @@ export default function KYCDetailPage() {
       toast.error("Please provide a reason for rejection");
       return;
     }
-    
+
     setProcessing(true);
     try {
       const response = await axiosInstance.post("/api/admin/kyc/reject", {
         kycId,
-        remarks
+        remarks,
       });
       if (response.data?.success) {
         toast.success(response.data.message || "KYC rejected");
@@ -170,7 +187,10 @@ export default function KYCDetailPage() {
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6" data-testid="admin-kyc-detail">
+    <div
+      className="p-6 max-w-5xl mx-auto space-y-6"
+      data-testid="admin-kyc-detail"
+    >
       {/* Header */}
       <div className="flex items-center justify-between">
         <Button variant="outline" onClick={() => router.push("/admin/kyc")}>
@@ -189,7 +209,7 @@ export default function KYCDetailPage() {
               User Information
             </CardTitle>
             <CardDescription>
-              Referral ID: {kycDetail.user?.referralId || 'N/A'}
+              Referral ID: {kycDetail.user?.referralId || "N/A"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -231,8 +251,10 @@ export default function KYCDetailPage() {
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
               <CreditCard className="w-5 h-5 text-gray-500" />
               <div>
-                <p className="text-sm text-gray-500">PAN/Aadhaar Number</p>
-                <p className="font-medium font-mono">{kycDetail.form.idNumber}</p>
+                <p className="text-sm text-gray-500">Nominee Name</p>
+                <p className="font-medium">
+                  {kycDetail.form.nomineeName || "N/A"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -254,24 +276,34 @@ export default function KYCDetailPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-500">Account Name</p>
-                      <p className="font-medium">{kycDetail.form.bank.accountName || 'N/A'}</p>
+                      <p className="font-medium">
+                        {kycDetail.form.bank.accountName || "N/A"}
+                      </p>
                     </div>
                     <div className="p-3 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-500">Bank Name</p>
-                      <p className="font-medium">{kycDetail.form.bank.bankName || 'N/A'}</p>
+                      <p className="font-medium">
+                        {kycDetail.form.bank.bankName || "N/A"}
+                      </p>
                     </div>
                     <div className="p-3 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-500">Account Number</p>
-                      <p className="font-medium font-mono">{kycDetail.form.bank.accountNumber || 'N/A'}</p>
+                      <p className="font-medium font-mono">
+                        {kycDetail.form.bank.accountNumber || "N/A"}
+                      </p>
                     </div>
                     <div className="p-3 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-500">IFSC Code</p>
-                      <p className="font-medium font-mono">{kycDetail.form.bank.ifsc || 'N/A'}</p>
+                      <p className="font-medium font-mono">
+                        {kycDetail.form.bank.ifsc || "N/A"}
+                      </p>
                     </div>
                   </div>
                 </>
               ) : (
-                <p className="text-gray-500 text-center py-4">No bank details provided</p>
+                <p className="text-gray-500 text-center py-4">
+                  No bank details provided
+                </p>
               )}
             </CardContent>
           </Card>
@@ -281,21 +313,111 @@ export default function KYCDetailPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileImage className="w-5 h-5" />
-                ID Proof Document
+                KYC Documents
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {kycDetail.idProofBase64 ? (
-                <div className="border rounded-lg p-2">
-                  <img
-                    src={kycDetail.idProofBase64}
-                    alt="ID Proof"
-                    className="w-full rounded"
-                  />
+            <CardContent className="space-y-4">
+              {/* PAN Card */}
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  PAN Card
+                </p>
+                {kycDetail.panCardUrl || kycDetail.panCardBase64 ? (
+                  <div className="border rounded-lg p-2">
+                    <img
+                      src={kycDetail.panCardUrl || kycDetail.panCardBase64}
+                      alt="PAN Card"
+                      className="w-full rounded max-h-64 object-contain"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-2 bg-gray-50 rounded">
+                    No PAN card uploaded
+                  </p>
+                )}
+              </div>
+
+              {/* Aadhar Card */}
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  Aadhar Card
+                </p>
+                {kycDetail.aadharCardUrl || kycDetail.aadharCardBase64 ? (
+                  <div className="border rounded-lg p-2">
+                    <img
+                      src={
+                        kycDetail.aadharCardUrl || kycDetail.aadharCardBase64
+                      }
+                      alt="Aadhar Card"
+                      className="w-full rounded max-h-64 object-contain"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-2 bg-gray-50 rounded">
+                    No Aadhar card uploaded
+                  </p>
+                )}
+              </div>
+
+              {/* Bank Passbook */}
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  Bank Passbook
+                </p>
+                {kycDetail.bankPassbookUrl || kycDetail.bankPassbookBase64 ? (
+                  <div className="border rounded-lg p-2">
+                    <img
+                      src={
+                        kycDetail.bankPassbookUrl ||
+                        kycDetail.bankPassbookBase64
+                      }
+                      alt="Bank Passbook"
+                      className="w-full rounded max-h-64 object-contain"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-2 bg-gray-50 rounded">
+                    No bank passbook uploaded
+                  </p>
+                )}
+              </div>
+
+              {/* Profile Photo */}
+              {(kycDetail.profilePhotoUrl || kycDetail.profilePhotoBase64) && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Profile Photo
+                  </p>
+                  <div className="border rounded-lg p-2">
+                    <img
+                      src={
+                        kycDetail.profilePhotoUrl ||
+                        kycDetail.profilePhotoBase64
+                      }
+                      alt="Profile Photo"
+                      className="w-full rounded max-h-64 object-contain"
+                    />
+                  </div>
                 </div>
-              ) : (
-                <p className="text-gray-500 text-center py-4">No ID proof uploaded</p>
               )}
+
+              {/* Legacy ID Proof (fallback for old submissions) */}
+              {kycDetail.idProofBase64 &&
+                !kycDetail.panCardUrl &&
+                !kycDetail.panCardBase64 && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-2">
+                      ID Proof
+                    </p>
+                    <div className="border rounded-lg p-2">
+                      <img
+                        src={kycDetail.idProofBase64}
+                        alt="ID Proof"
+                        className="w-full rounded max-h-64 object-contain"
+                      />
+                    </div>
+                  </div>
+                )}
             </CardContent>
           </Card>
         </div>
@@ -306,7 +428,9 @@ export default function KYCDetailPage() {
         <Card>
           <CardHeader>
             <CardTitle>Review Actions</CardTitle>
-            <CardDescription>Approve or reject this KYC submission</CardDescription>
+            <CardDescription>
+              Approve or reject this KYC submission
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {showRejectForm ? (
@@ -342,7 +466,7 @@ export default function KYCDetailPage() {
               </div>
             ) : (
               <>
-                <div>
+                {/* <div>
                   <Label>Remarks (Optional)</Label>
                   <Textarea
                     value={remarks}
@@ -350,7 +474,7 @@ export default function KYCDetailPage() {
                     placeholder="Add any remarks or notes..."
                     rows={2}
                   />
-                </div>
+                </div> */}
                 <div className="flex gap-3">
                   <Button
                     className="bg-green-600 hover:bg-green-700"
@@ -388,9 +512,21 @@ export default function KYCDetailPage() {
 
       {/* Previous Remarks */}
       {kycDetail.remarks && (
-        <Card className={kycDetail.status === "REJECTED" ? "border-red-200" : "border-green-200"}>
+        <Card
+          className={
+            kycDetail.status === "REJECTED"
+              ? "border-red-200"
+              : "border-green-200"
+          }
+        >
           <CardContent className="p-4">
-            <p className={`font-medium ${kycDetail.status === "REJECTED" ? "text-red-600" : "text-green-600"}`}>
+            <p
+              className={`font-medium ${
+                kycDetail.status === "REJECTED"
+                  ? "text-red-600"
+                  : "text-green-600"
+              }`}
+            >
               Admin Remarks:
             </p>
             <p className="text-gray-700 mt-1">{kycDetail.remarks}</p>
