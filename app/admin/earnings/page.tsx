@@ -271,7 +271,7 @@ export default function AdminEarningsPage() {
             <p className="text-2xl font-bold text-blue-900">₹{referralIncomePaid.toLocaleString()}</p>
             <p className="text-xs text-blue-600 mt-1">Direct referral bonus</p>
           </div> */}
-          <div className="bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200 rounded-xl p-5">
+          {/* <div className="bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200 rounded-xl p-5">
             <p className="text-sm text-teal-700 font-medium mb-2">
               Level Income Credited
             </p>
@@ -281,7 +281,7 @@ export default function AdminEarningsPage() {
             <p className="text-xs text-teal-600 mt-1">
               In user wallets (not yet withdrawn)
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -314,12 +314,12 @@ export default function AdminEarningsPage() {
             <p className="text-white/70 text-sm mb-1">Referral Income</p>
             <p className="text-2xl font-bold">₹{adminEarnings.REFERRAL_INCOME.toLocaleString()}</p>
           </div> */}
-          <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
+          {/* <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
             <p className="text-white/70 text-sm mb-1">Level Income</p>
             <p className="text-2xl font-bold">
               ₹{adminEarnings.LEVEL_INCOME.toLocaleString()}
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
 

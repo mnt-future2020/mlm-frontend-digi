@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, TrendingUp, Wallet, Gift, ArrowRight, UserPlus, CreditCard, Network, Share2, Copy, Check } from "lucide-react";
+import { Users, TrendingUp, Wallet, Gift, UserPlus, CreditCard, Share2, Copy, Check } from "lucide-react";
 import { PageContainer, PageHeader, StatsCard } from "@/components/ui/page-components";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -35,8 +35,9 @@ interface DashboardData {
     total: number;
     left: number;
     right: number;
-    rightTeamSize?: number;
-    leftTeamSize?: number;
+    leftPV: number;
+    rightPV: number;
+    totalPV: number;
   };
   currentPlan: any;
   rank?: {
@@ -129,7 +130,7 @@ export default function UserDashboard() {
       <KYCBanner />
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <StatsCard
           label="Total Earnings"
           value={`₹${dashboardData?.wallet?.totalEarnings || 0}`}
@@ -152,18 +153,18 @@ export default function UserDashboard() {
           trend={{ value: "Ready to withdraw", isPositive: true }}
         />
         <StatsCard
-          label="Matching Income"
-          value={`₹${dashboardData?.wallet?.matchingIncome || 0}`}
-          icon={<Network className="w-6 h-6 text-blue-600" />}
+          label="Left PV"
+          value={String(dashboardData?.team?.leftPV || 0)}
+          icon={<TrendingUp className="w-6 h-6 text-blue-600" />}
           gradient="bg-blue-500"
-          trend={{ value: "Binary Matching", isPositive: true }}
+          trend={{ value: "Left leg volume", isPositive: true }}
         />
         <StatsCard
-          label="Team Members"
-          value={String(dashboardData?.team?.total || 0)}
-          icon={<Users className="w-6 h-6 text-indigo-600" />}
+          label="Right PV"
+          value={String(dashboardData?.team?.rightPV || 0)}
+          icon={<TrendingUp className="w-6 h-6 text-indigo-600" />}
           gradient="bg-indigo-500"
-          trend={{ value: `Left: ${dashboardData?.team?.left || 0}, Right: ${dashboardData?.team?.right || 0}`, isPositive: true }}
+          trend={{ value: "Right leg volume", isPositive: true }}
         />
         <StatsCard
           label="Current Plan"
@@ -172,7 +173,49 @@ export default function UserDashboard() {
           gradient="bg-pink-500"
           trend={{ value: dashboardData?.currentPlan ? `${dashboardData.currentPlan.pv} PV` : "Activate a plan", isPositive: true }}
         />
-        {dashboardData?.rank && (
+      </div>
+
+      {/* Team Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <Users className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Left Team</p>
+                <p className="text-2xl font-bold text-foreground">{dashboardData?.team?.left || 0}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Left PV</p>
+              <p className="text-lg font-semibold text-blue-600">{dashboardData?.team?.leftPV || 0}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                <Users className="w-6 h-6 text-indigo-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Right Team</p>
+                <p className="text-2xl font-bold text-foreground">{dashboardData?.team?.right || 0}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Right PV</p>
+              <p className="text-lg font-semibold text-indigo-600">{dashboardData?.team?.rightPV || 0}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Rank Card */}
+      {dashboardData?.rank && (
+        <div className="mb-8">
           <div className="bg-card border-2 border-border rounded-xl p-6 shadow-lg" style={{ borderColor: dashboardData.rank.color }}>
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium text-muted-foreground">Current Rank</p>
@@ -181,12 +224,19 @@ export default function UserDashboard() {
             <h3 className="text-2xl font-bold mb-1" style={{ color: dashboardData.rank.color }}>
               {dashboardData.rank.name}
             </h3>
-            <p className="text-sm text-muted-foreground">
-              Minimum: {dashboardData.rank.minPV} PV
-            </p>
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+              <div>
+                <p className="text-xs text-muted-foreground">Total PV Earned</p>
+                <p className="text-lg font-bold text-foreground">{dashboardData?.team?.totalPV || 0}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Minimum Required</p>
+                <p className="text-lg font-semibold" style={{ color: dashboardData.rank.color }}>{dashboardData.rank.minPV} PV</p>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Referral Links Card */}
       <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-6 shadow-lg text-white mb-8">

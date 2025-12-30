@@ -20,6 +20,13 @@ interface DashboardStats {
     pendingWithdrawalsAmount: number;
     recentRegistrations: number;
   };
+  adminTeam: {
+    leftPV: number;
+    rightPV: number;
+    leftTeam: number;
+    rightTeam: number;
+    totalPV: number;
+  };
   planDistribution: Record<string, number>;
   dailyReports: any[];
   incomeBreakdown: Record<string, number>;
@@ -101,6 +108,54 @@ export default function AdminDashboard() {
             isPositive: (stats?.overview?.netProfit || 0) > 0 
           }}
         />
+      </div>
+
+      {/* Admin Team Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Left PV</p>
+              <p className="text-2xl font-bold text-blue-600">{stats?.adminTeam?.leftPV || 0}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Right PV</p>
+              <p className="text-2xl font-bold text-indigo-600">{stats?.adminTeam?.rightPV || 0}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+              <Users className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Left Team</p>
+              <p className="text-2xl font-bold text-green-600">{stats?.adminTeam?.leftTeam || 0}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+              <Users className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Right Team</p>
+              <p className="text-2xl font-bold text-purple-600">{stats?.adminTeam?.rightTeam || 0}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Plan Distribution */}

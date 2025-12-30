@@ -502,14 +502,14 @@ function UserDetailsModal({
                   Income
                 </h3>
                 <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                  <div>
+                  {/* <div>
                     <p className="text-[10px] sm:text-xs text-amber-700">
                       Referral
                     </p>
                     <p className="text-sm sm:text-lg font-bold text-amber-900">
                       ₹{userDetails.incomeBreakdown.REFERRAL_INCOME || 0}
                     </p>
-                  </div>
+                  </div> */}
                   <div>
                     <p className="text-[10px] sm:text-xs text-amber-700">
                       Matching
