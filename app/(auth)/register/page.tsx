@@ -172,7 +172,7 @@ function RegisterPageContent() {
           >
             <Link href="/" className="flex items-center gap-3">
               <Image
-                src="/assets/images/logo/vsv.webp"
+                src="/assets/images/logo/vsv-unite-new.jpeg"
                 alt="VSV Unite Logo"
                 width={80}
                 height={80}
@@ -260,7 +260,7 @@ function RegisterPageContent() {
           <div className="md:hidden flex justify-center mb-4">
             <Link href="/" className="flex items-center gap-3">
               <Image
-                src="/assets/images/logo/vsv.webp"
+                src="/assets/images/logo/vsv-unite-new.jpeg"
                 alt="VSV Unite Logo"
                 width={80}
                 height={80}

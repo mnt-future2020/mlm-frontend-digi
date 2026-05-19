@@ -36,12 +36,16 @@ axiosInstance.interceptors.response.use(
   (error) => {
     // Handle 401 Unauthorized (token expired) - only on client-side
     if (error.response?.status === 401 && typeof window !== 'undefined') {
-      // Clear auth data
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      
-      // Redirect to login if not already there
-      if (!window.location.pathname.includes('/login')) {
+      const pathname = window.location.pathname;
+
+      // Only redirect to login from protected pages (dashboard/admin)
+      // Do NOT redirect from public pages like home, register, etc.
+      const isProtectedPage = pathname.startsWith('/dashboard') || pathname.startsWith('/admin');
+
+      if (isProtectedPage) {
+        // Clear auth data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         window.location.href = '/login';
       }
     }

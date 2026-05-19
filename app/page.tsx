@@ -48,7 +48,7 @@ export default function Home() {
       try {
         const [settingsRes, plansRes] = await Promise.all([
           axiosInstance.get("/api/settings/public"),
-          axiosInstance.get("/api/admin/plans"),
+          axiosInstance.get("/api/plans"),
         ]);
 
         if (settingsRes.data.success) {

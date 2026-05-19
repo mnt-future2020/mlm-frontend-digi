@@ -30,7 +30,7 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center rounded-full gap-3 group">
             <Image
-              src="/assets/images/logo/vsv.webp"
+              src="/assets/images/logo/vsv-unite-new.jpeg"
               alt="VSV Unite Logo"
               width={256}
               height={256}
@@ -115,7 +115,7 @@ export function Navbar() {
                 <SheetTitle>
                   <Link href="/" className="flex items-center gap-3">
                     <Image
-                      src="/assets/images/logo/vsv-unite.png"
+                      src="/assets/images/logo/vsv-unite-new.jpeg"
                       alt="VSV Unite Logo"
                       width={64}
                       height={64}

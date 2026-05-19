@@ -202,7 +202,7 @@ function AdminResetPasswordContent() {
             <Link href="/" className="flex items-center gap-3">
               <div className="relative w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-white shadow-md flex items-center justify-center p-1">
                 <Image
-                  src="/assets/images/logo/vsv-unite.png"
+                  src="/assets/images/logo/vsv-unite-new.jpeg"
                   alt="VSV Unite Logo"
                   width={50}
                   height={50}
@@ -272,7 +272,7 @@ function AdminResetPasswordContent() {
             <Link href="/" className="flex items-center gap-2">
               <div className="relative w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center p-1">
                 <Image
-                  src="/assets/images/logo/vsv-unite.png"
+                  src="/assets/images/logo/vsv-unite-new.jpeg"
                   alt="VSV Unite Logo"
                   width={50}
                   height={50}

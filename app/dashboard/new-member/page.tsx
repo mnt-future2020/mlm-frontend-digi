@@ -592,7 +592,7 @@ export default function NewMemberPage() {
                 {/* Logo Image */}
                 <div className="w-32 h-32 flex items-center justify-center mb-4">
                   <img
-                    src="/assets/images/logo/vsv.webp"
+                    src="/assets/images/logo/vsv-unite-new.jpeg"
                     alt="VSV Logo"
                     className="w-full h-full object-contain"
                   />

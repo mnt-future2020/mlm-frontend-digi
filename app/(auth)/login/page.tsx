@@ -126,7 +126,7 @@ export default function LoginPage() {
           >
             <Link href="/" className="flex items-center gap-3">
               <Image
-                src="/assets/images/logo/vsv.jpeg"
+                src="/assets/images/logo/vsv-unite-new.jpeg"
                 alt="VSV Unite Logo"
                 width={80}
                 height={80}
@@ -201,7 +201,7 @@ export default function LoginPage() {
           <div className="md:hidden flex justify-center mb-6">
             <Link href="/" className="flex items-center gap-3">
               <Image
-                src="/assets/images/logo/vsv.jpeg"
+                src="/assets/images/logo/vsv-unite-new.jpeg"
                 alt="VSV Unite Logo"
                 width={80}
                 height={80}
