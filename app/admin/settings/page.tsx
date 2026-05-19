@@ -102,7 +102,7 @@ export default function SettingsPage() {
       }
     };
     fetchSystemTime();
-    const interval = setInterval(fetchSystemTime, 1000);
+    const interval = setInterval(fetchSystemTime, 30000);
     return () => clearInterval(interval);
   }, []);
 

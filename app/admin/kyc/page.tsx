@@ -54,18 +54,19 @@ export default function AdminKYCPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch stats
-      const statsResponse = await axiosInstance.get("/api/admin/kyc/stats");
+      // Fetch stats and submissions in parallel
+      const endpoint = filter === "SUBMITTED"
+        ? "/api/admin/kyc/pending"
+        : `/api/admin/kyc/all?status=${filter}`;
+
+      const [statsResponse, submissionsResponse] = await Promise.all([
+        axiosInstance.get("/api/admin/kyc/stats"),
+        axiosInstance.get(endpoint),
+      ]);
+
       if (statsResponse.data?.success) {
         setStats(statsResponse.data.data);
       }
-
-      // Fetch submissions based on filter
-      const endpoint = filter === "SUBMITTED" 
-        ? "/api/admin/kyc/pending"
-        : `/api/admin/kyc/all?status=${filter}`;
-      
-      const submissionsResponse = await axiosInstance.get(endpoint);
       if (submissionsResponse.data?.success) {
         setSubmissions(submissionsResponse.data.data.submissions || []);
       }

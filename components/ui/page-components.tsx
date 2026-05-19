@@ -51,7 +51,7 @@ export function PageContainer({ children, maxWidth = "full", className }: PageCo
   };
 
   return (
-    <div className={cn("min-h-screen bg-background p-4 sm:p-6 lg:p-8", className)}>
+    <div className={cn("bg-background p-4 sm:p-6 lg:p-8", className)}>
       <div className={cn("mx-auto", maxWidthClasses[maxWidth])}>{children}</div>
     </div>
   );
