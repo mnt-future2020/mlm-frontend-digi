@@ -13,12 +13,15 @@ import {
   TrendingUp,
   Wallet,
   Copy,
+  Info,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { PageContainer, PageHeader } from "@/components/ui/page-components";
+import { PageHeader } from "@/components/ui/page-components";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { axiosInstance } from "@/lib/api";
 
 type TreeNode = {
@@ -97,15 +100,18 @@ function TreeNodeComponent({
   node,
   isRoot = false,
   onNodeClick,
+  highlightedId,
 }: {
   node: TreeNode;
   isRoot?: boolean;
   onNodeClick: (nodeId: string) => void;
+  highlightedId?: string | null;
 }) {
   const planColors = getPlanColors(node.currentPlan);
   const avatarColor = node.isActive ? "bg-green-500" : "bg-red-500";
   const isLeft = node.placement === "LEFT";
   const isRight = node.placement === "RIGHT";
+  const isHighlighted = highlightedId === node.referralId;
 
   return (
     <div className="flex flex-col items-center">
@@ -123,11 +129,13 @@ function TreeNodeComponent({
 
       {/* Node Card - Responsive sizing */}
       <div
+        data-referral-id={node.referralId}
         onClick={() => onNodeClick(node.referralId)}
         className={cn(
           "relative px-3 py-2 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl border-2 min-w-[100px] sm:min-w-[160px] transition-all hover:scale-105 hover:shadow-lg bg-card z-10 cursor-pointer",
           isRoot ? "border-primary-500 shadow-primary-100" : planColors.border,
-          !isRoot && planColors.shadow
+          !isRoot && planColors.shadow,
+          isHighlighted && "ring-4 ring-primary-400 ring-offset-2 scale-110 shadow-xl"
         )}
       >
         <div className="flex flex-col items-center gap-0.5 sm:gap-1">
@@ -179,6 +187,7 @@ function TreeNodeComponent({
                     <TreeNodeComponent
                       node={node.left}
                       onNodeClick={onNodeClick}
+                      highlightedId={highlightedId}
                     />
                   ) : (
                     <div className="px-3 py-2 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl border-2 border-dashed border-border bg-muted/30 min-w-[100px] sm:min-w-[160px] flex items-center justify-center">
@@ -198,6 +207,7 @@ function TreeNodeComponent({
                     <TreeNodeComponent
                       node={node.right}
                       onNodeClick={onNodeClick}
+                      highlightedId={highlightedId}
                     />
                   ) : (
                     <div className="px-3 py-2 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl border-2 border-dashed border-border bg-muted/30 min-w-[100px] sm:min-w-[160px] flex items-center justify-center">
@@ -625,153 +635,161 @@ export default function UserBinaryTreePage() {
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [showLegend, setShowLegend] = useState(false);
+  const [searchId, setSearchId] = useState("");
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const treeWrapperRef = useRef<HTMLDivElement>(null);
 
-  // Zoom and Pan state
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(0.8);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [isSpacePressed, setIsSpacePressed] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isTouchPanning, setIsTouchPanning] = useState(false);
+  const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
-  // Keyboard event handlers for spacebar pan mode
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Space" && !isSpacePressed) {
-        e.preventDefault();
-        setIsSpacePressed(true);
-      }
+      if (e.code === "Space" && !isSpacePressed) { e.preventDefault(); setIsSpacePressed(true); }
     };
-
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === "Space") {
-        e.preventDefault();
-        setIsSpacePressed(false);
-        setIsPanning(false);
-      }
+      if (e.code === "Space") { e.preventDefault(); setIsSpacePressed(false); setIsPanning(false); }
     };
-
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
+    return () => { window.removeEventListener("keydown", handleKeyDown); window.removeEventListener("keyup", handleKeyUp); };
   }, [isSpacePressed]);
 
-  // Wheel event handler for zoom and scroll
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
-      const treeContainer = document.getElementById("tree-container");
-      if (!treeContainer?.contains(e.target as Node)) return;
-
+      const container = document.getElementById("tree-container-user");
+      if (!container?.contains(e.target as Node)) return;
+      e.preventDefault();
       if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        const zoomDelta = e.deltaY > 0 ? -0.1 : 0.1;
-        setZoom((prev) => Math.max(0.3, Math.min(3, prev + zoomDelta)));
+        const rect = container.getBoundingClientRect();
+        const cx = e.clientX - rect.left - rect.width / 2;
+        const cy = e.clientY - rect.top - rect.height / 2;
+        const delta = e.deltaY > 0 ? -0.05 : 0.05;
+        setZoom((prev) => {
+          const newZoom = Math.max(0.2, Math.min(3, prev + delta));
+          const ratio = newZoom / prev;
+          setPan((p) => ({
+            x: cx - ratio * (cx - p.x),
+            y: cy - ratio * (cy - p.y),
+          }));
+          return newZoom;
+        });
       } else {
-        e.preventDefault();
-        const scrollDelta = e.deltaY * 0.5;
-        setPan((prev) => ({
-          x: prev.x,
-          y: prev.y - scrollDelta,
-        }));
+        setPan((prev) => ({ x: prev.x - e.deltaX * 0.8, y: prev.y - e.deltaY * 0.8 }));
       }
     };
-
     window.addEventListener("wheel", handleWheel, { passive: false });
-    return () => {
-      window.removeEventListener("wheel", handleWheel);
-    };
+    return () => window.removeEventListener("wheel", handleWheel);
   }, []);
 
   useEffect(() => {
     if (!mounted) return;
-
-    const fetchTree = async () => {
-      try {
-        const response = await axiosInstance.get("/api/user/team/tree");
-        if (response.data.success) {
-          setTreeData(response.data.data);
-        }
-      } catch (error: any) {
-        console.error("Error fetching tree:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTree();
+    axiosInstance.get("/api/user/team/tree")
+      .then((res) => { if (res.data.success) setTreeData(res.data.data); })
+      .catch((err) => console.error("Error fetching tree:", err))
+      .finally(() => setLoading(false));
   }, [mounted]);
 
   const handleNodeClick = (nodeId: string) => {
-    if (!isPanning && !isSpacePressed) {
-      setSelectedUserId(nodeId);
+    if (!isPanning && !isSpacePressed && !isTouchPanning) setSelectedUserId(nodeId);
+  };
+
+  const handleSearch = () => {
+    const query = searchId.trim().toUpperCase();
+    if (!query) return;
+    const container = document.getElementById("tree-container-user");
+    if (!container || !treeWrapperRef.current) return;
+
+    const node = treeWrapperRef.current.querySelector(`[data-referral-id="${query}"]`) as HTMLElement;
+    if (!node) {
+      toast.error(`Member "${query}" not found in tree`);
+      setHighlightedId(null);
+      return;
     }
-  };
 
-  // Zoom functions
-  const handleZoomIn = () => {
-    setZoom((prev) => Math.min(prev + 0.2, 3));
-  };
+    const containerRect = container.getBoundingClientRect();
+    const nodeRect = node.getBoundingClientRect();
+    const nodeCenterX = nodeRect.left + nodeRect.width / 2;
+    const nodeCenterY = nodeRect.top + nodeRect.height / 2;
+    const containerCenterX = containerRect.left + containerRect.width / 2;
+    const containerCenterY = containerRect.top + containerRect.height / 2;
 
-  const handleZoomOut = () => {
-    setZoom((prev) => Math.max(prev - 0.2, 0.3));
-  };
+    const naturalX = (nodeCenterX - containerCenterX - pan.x) / zoom;
+    const naturalY = (nodeCenterY - containerCenterY - pan.y) / zoom;
 
-  const handleResetView = () => {
+    setPan({ x: -naturalX, y: -naturalY });
     setZoom(1);
-    setPan({ x: 0, y: 0 });
+    setHighlightedId(query);
+    setTimeout(() => setHighlightedId(null), 3000);
   };
 
-  // Pan functions
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.15, 3));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.15, 0.2));
+  const handleResetView = () => { setZoom(0.8); setPan({ x: 0, y: 0 }); };
+
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (isSpacePressed) {
-      setIsPanning(true);
-      setDragStart({ x: e.clientX, y: e.clientY });
-      setDragOffset(pan);
-    }
+    if (isSpacePressed) { setIsPanning(true); setDragStart({ x: e.clientX, y: e.clientY }); setDragOffset(pan); }
   };
-
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isPanning && isSpacePressed) {
-      const deltaX = e.clientX - dragStart.x;
-      const deltaY = e.clientY - dragStart.y;
-      setPan({
-        x: dragOffset.x + deltaX,
-        y: dragOffset.y + deltaY,
-      });
+      setPan({ x: dragOffset.x + e.clientX - dragStart.x, y: dragOffset.y + e.clientY - dragStart.y });
     }
   };
+  const handleMouseUp = () => setIsPanning(false);
 
-  const handleMouseUp = () => {
-    setIsPanning(false);
+  const getTouchDistance = (touches: React.TouchList) => {
+    if (touches.length < 2) return null;
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
   };
 
-  const handleContextMenu = (e: React.MouseEvent) => {
-    if (isSpacePressed) {
-      e.preventDefault();
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setIsTouchPanning(true);
+      setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+      setDragOffset(pan);
+    } else if (e.touches.length === 2) {
+      setLastTouchDistance(getTouchDistance(e.touches));
     }
-  };
+  }, [pan]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 1 && isTouchPanning) {
+      setPan({ x: dragOffset.x + e.touches[0].clientX - dragStart.x, y: dragOffset.y + e.touches[0].clientY - dragStart.y });
+    } else if (e.touches.length === 2 && lastTouchDistance !== null) {
+      const newDist = getTouchDistance(e.touches);
+      if (newDist) {
+        setZoom((prev) => Math.max(0.2, Math.min(3, prev * (newDist / lastTouchDistance))));
+        setLastTouchDistance(newDist);
+      }
+    }
+  }, [isTouchPanning, dragStart, dragOffset, lastTouchDistance]);
+
+  const handleTouchEnd = useCallback(() => {
+    setIsTouchPanning(false);
+    setLastTouchDistance(null);
+  }, []);
 
   if (loading) {
     return (
-      <PageContainer maxWidth="full">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-        </div>
-      </PageContainer>
+      <div className="p-4 sm:p-6 lg:p-8 flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
     );
   }
 
   if (!treeData) {
     return (
-      <PageContainer maxWidth="full">
+      <div className="p-4 sm:p-6 lg:p-8">
         <PageHeader
           icon={<Network className="w-6 h-6 text-white" />}
           title="Binary Tree View"
@@ -779,58 +797,77 @@ export default function UserBinaryTreePage() {
         />
         <div className="bg-card border border-border rounded-xl p-12 text-center">
           <Network className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <p className="text-lg text-muted-foreground">
-            No team data available
-          </p>
+          <p className="text-lg text-muted-foreground">No team data available</p>
         </div>
-      </PageContainer>
+      </div>
     );
   }
 
   return (
-    <PageContainer maxWidth="full">
-      <PageHeader
-        icon={<Network className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
-        title="Binary Tree View"
-        subtitle="Tap on any user to view details"
-        action={
-          <div className="flex gap-1.5 sm:gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 sm:h-10 sm:w-10 border-border hover:bg-muted"
-              onClick={handleZoomIn}
-              disabled={zoom >= 3}
-            >
-              <ZoomIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 sm:h-10 sm:w-10 border-border hover:bg-muted"
-              onClick={handleZoomOut}
-              disabled={zoom <= 0.3}
-            >
-              <ZoomOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 sm:h-10 sm:w-10 border-border hover:bg-muted"
-              onClick={handleResetView}
-              title="Reset View"
-            >
-              <Maximize className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </Button>
-          </div>
-        }
-      />
+    <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden">
+      <div className="flex-shrink-0 p-4 sm:px-6 sm:pt-6 sm:pb-0">
+        <PageHeader
+          icon={<Network className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
+          title="Binary Tree View"
+          subtitle="Scroll to pan • Ctrl+scroll to zoom • Click nodes for details"
+          action={
+            <div className="flex gap-1.5 sm:gap-2">
+              <Button variant={showLegend ? "default" : "outline"} size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={() => setShowLegend((v) => !v)}>
+                <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={handleZoomIn} disabled={zoom >= 3}>
+                <ZoomIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={handleZoomOut} disabled={zoom <= 0.2}>
+                <ZoomOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={handleResetView} title="Reset View">
+                <Maximize className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </Button>
+            </div>
+          }
+        />
+      </div>
 
-      {/* Tree Container */}
+      {/* Search bar */}
+      <div className="flex-shrink-0 mx-4 sm:mx-6 mb-2">
+        <form onSubmit={(e) => { e.preventDefault(); handleSearch(); }} className="flex gap-2">
+          <div className="relative flex-1 max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Search by Referral ID..." value={searchId} onChange={(e) => setSearchId(e.target.value)} className="pl-9 h-9" />
+          </div>
+          <Button type="submit" size="sm" className="h-9">Find</Button>
+        </form>
+      </div>
+
+      {showLegend && (
+        <div className="flex-shrink-0 mx-4 sm:mx-6 mb-2 bg-card border border-border rounded-xl p-3 shadow-sm">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs sm:text-sm">
+            <div className="flex items-center gap-4">
+              <span className="font-semibold text-foreground">Status:</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green-500" />Active</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500" />Inactive</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="font-semibold text-foreground">Side:</span>
+              <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded-full bg-blue-500 text-[8px] font-bold text-white flex items-center justify-center">L</span>Left</span>
+              <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded-full bg-purple-500 text-[8px] font-bold text-white flex items-center justify-center">R</span>Right</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="font-semibold text-foreground">Plans:</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-slate-400" />Basic</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-blue-500" />Medium</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-purple-500" />Large</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-amber-500" />Premium</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
-        id="tree-container"
+        id="tree-container-user"
         className={cn(
-          "bg-muted/30 border border-border rounded-xl sm:rounded-2xl overflow-hidden min-h-[400px] sm:min-h-[600px] flex flex-col items-center justify-center relative select-none touch-none",
+          "flex-1 min-h-0 mx-4 sm:mx-6 mb-4 sm:mb-6 bg-muted/30 border border-border rounded-xl sm:rounded-2xl overflow-hidden flex flex-col items-center justify-center relative select-none touch-none",
           isSpacePressed ? "cursor-grab" : "cursor-default",
           isPanning ? "cursor-grabbing" : ""
         )}
@@ -838,27 +875,11 @@ export default function UserBinaryTreePage() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        onContextMenu={handleContextMenu}
-        onTouchStart={(e) => {
-          if (e.touches.length === 1) {
-            setIsPanning(true);
-            setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
-            setDragOffset(pan);
-          }
-        }}
-        onTouchMove={(e) => {
-          if (isPanning && e.touches.length === 1) {
-            const deltaX = e.touches[0].clientX - dragStart.x;
-            const deltaY = e.touches[0].clientY - dragStart.y;
-            setPan({
-              x: dragOffset.x + deltaX,
-              y: dragOffset.y + deltaY,
-            });
-          }
-        }}
-        onTouchEnd={() => setIsPanning(false)}
+        onContextMenu={(e) => { if (isSpacePressed) e.preventDefault(); }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
-        {/* Background Grid Pattern */}
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{
@@ -868,125 +889,29 @@ export default function UserBinaryTreePage() {
           }}
         />
 
-        {/* Zoom Level Indicator */}
-        <div className="absolute top-2 left-2 sm:top-4 sm:left-4 bg-card border border-border rounded-md sm:rounded-lg px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium text-foreground z-20">
+        <div className="absolute top-2 left-2 sm:top-4 sm:left-4 bg-card border border-border rounded-lg px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium text-foreground z-20">
           {Math.round(zoom * 100)}%
         </div>
 
-        {/* Pan Mode Indicator */}
         {isSpacePressed && (
-          <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-primary-500 text-white rounded-md sm:rounded-lg px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium z-20 flex items-center gap-1 sm:gap-2">
-            <span>🖐️</span>
-            <span className="hidden sm:inline">
-              Pan Mode - Hold Space & Drag
-            </span>
-            <span className="sm:hidden">Pan</span>
+          <div className="absolute top-4 right-4 bg-primary-500 text-white rounded-lg px-3 py-1 text-sm font-medium z-20 hidden sm:block">
+            Pan Mode
           </div>
         )}
 
         <div
-          className="flex justify-center min-w-max z-10 transition-transform duration-150 ease-out"
+          ref={treeWrapperRef}
+          className="flex justify-center min-w-max z-10 p-4 sm:p-8"
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
             transformOrigin: "center center",
           }}
         >
-          <TreeNodeComponent
-            node={treeData}
-            isRoot={true}
-            onNodeClick={handleNodeClick}
-          />
+          <TreeNodeComponent node={treeData} isRoot={true} onNodeClick={handleNodeClick} highlightedId={highlightedId} />
         </div>
       </div>
 
-      {/* Legend & Controls */}
-      <div className="mt-4 sm:mt-6 bg-card border border-border rounded-xl p-3 sm:p-4 shadow-sm">
-        <div className="flex flex-col gap-3">
-          {/* Status Legend */}
-          <div className="flex flex-wrap gap-3 sm:gap-6 items-center">
-            <span className="text-xs sm:text-sm font-semibold text-foreground">
-              Status:
-            </span>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-500"></div>
-              <span className="text-xs sm:text-sm text-muted-foreground">Active</span>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500"></div>
-              <span className="text-xs sm:text-sm text-muted-foreground">Inactive</span>
-            </div>
-          </div>
-          
-          {/* Side Legend */}
-          <div className="flex flex-wrap gap-3 sm:gap-6 items-center">
-            <span className="text-xs sm:text-sm font-semibold text-foreground">
-              Side:
-            </span>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-500 flex items-center justify-center text-[8px] sm:text-[10px] font-bold text-white">
-                L
-              </div>
-              <span className="text-xs sm:text-sm text-muted-foreground">Left</span>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-purple-500 flex items-center justify-center text-[8px] sm:text-[10px] font-bold text-white">
-                R
-              </div>
-              <span className="text-xs sm:text-sm text-muted-foreground">Right</span>
-            </div>
-          </div>
-
-          {/* Plan Legend */}
-          <div className="flex flex-wrap gap-3 sm:gap-6 items-center">
-            <span className="text-xs sm:text-sm font-semibold text-foreground">
-              Plans:
-            </span>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-slate-400"></div>
-              <span className="text-xs sm:text-sm text-muted-foreground">Basic</span>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-blue-500"></div>
-              <span className="text-xs sm:text-sm text-muted-foreground">Medium</span>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-purple-500"></div>
-              <span className="text-xs sm:text-sm text-muted-foreground">Large</span>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-amber-500"></div>
-              <span className="text-xs sm:text-sm text-muted-foreground">Premium</span>
-            </div>
-          </div>
-
-          {/* Controls hint - desktop only */}
-          <div className="hidden sm:flex flex-wrap gap-4 text-xs text-muted-foreground border-t border-border pt-3">
-            <div className="flex items-center gap-1">
-              <span>💡</span>
-              <span>Click nodes for details</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span>⌨️</span>
-              <span>Hold SPACE + drag to pan</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span>🔍</span>
-              <span>Ctrl+scroll to zoom</span>
-            </div>
-          </div>
-
-          {/* Mobile hint */}
-          <p className="sm:hidden text-[10px] text-muted-foreground text-center border-t border-border pt-2">
-            💡 Tap nodes for details • Pinch to zoom • Drag to pan
-          </p>
-        </div>
-      </div>
-
-      {/* User Details Modal */}
-      <UserDetailsModal
-        userId={selectedUserId}
-        onClose={() => setSelectedUserId(null)}
-      />
-    </PageContainer>
+      <UserDetailsModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
+    </div>
   );
 }

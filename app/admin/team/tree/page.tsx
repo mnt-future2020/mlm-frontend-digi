@@ -13,13 +13,15 @@ import {
   TrendingUp,
   Wallet,
   Copy,
-  Move,
+  Info,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { PageContainer, PageHeader } from "@/components/ui/page-components";
+import { PageHeader } from "@/components/ui/page-components";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { Input } from "@/components/ui/input";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { axiosInstance } from "@/lib/api";
 import { SkeletonHeader, SkeletonTreeNode } from "@/components/ui/skeleton";
 
@@ -71,39 +73,18 @@ type UserDetails = {
   };
 };
 
-// Plan color mapping
 const getPlanColors = (plan: string | null | undefined) => {
   switch (plan) {
     case "Basic":
-      return {
-        border: "border-slate-400",
-        bg: "bg-slate-400",
-        shadow: "shadow-slate-100",
-      };
+      return { border: "border-slate-400", bg: "bg-slate-400", shadow: "shadow-slate-100" };
     case "Medium":
-      return {
-        border: "border-blue-500",
-        bg: "bg-blue-500",
-        shadow: "shadow-blue-100",
-      };
+      return { border: "border-blue-500", bg: "bg-blue-500", shadow: "shadow-blue-100" };
     case "Large":
-      return {
-        border: "border-purple-500",
-        bg: "bg-purple-500",
-        shadow: "shadow-purple-100",
-      };
+      return { border: "border-purple-500", bg: "bg-purple-500", shadow: "shadow-purple-100" };
     case "Premium":
-      return {
-        border: "border-amber-500",
-        bg: "bg-amber-500",
-        shadow: "shadow-amber-100",
-      };
+      return { border: "border-amber-500", bg: "bg-amber-500", shadow: "shadow-amber-100" };
     default:
-      return {
-        border: "border-gray-300",
-        bg: "bg-gray-400",
-        shadow: "shadow-gray-100",
-      };
+      return { border: "border-gray-300", bg: "bg-gray-400", shadow: "shadow-gray-100" };
   }
 };
 
@@ -111,19 +92,21 @@ function TreeNodeComponent({
   node,
   isRoot = false,
   onNodeClick,
+  highlightedId,
 }: {
   node: TreeNode;
   isRoot?: boolean;
   onNodeClick: (nodeId: string) => void;
+  highlightedId?: string | null;
 }) {
   const planColors = getPlanColors(node.currentPlan);
   const avatarColor = node.isActive ? "bg-green-500" : "bg-red-500";
   const isLeft = node.placement === "LEFT";
   const isRight = node.placement === "RIGHT";
+  const isHighlighted = highlightedId === node.referralId;
 
   return (
     <div className="flex flex-col items-center">
-      {/* L/R Side Indicator */}
       {!isRoot && (isLeft || isRight) && (
         <div
           className={cn(
@@ -135,13 +118,14 @@ function TreeNodeComponent({
         </div>
       )}
 
-      {/* Node Card - Mobile responsive */}
       <div
+        data-referral-id={node.referralId}
         onClick={() => onNodeClick(node.referralId)}
         className={cn(
           "relative px-3 py-2 sm:px-6 sm:py-4 rounded-xl border-2 min-w-[120px] sm:min-w-[160px] transition-all hover:scale-105 hover:shadow-lg bg-card z-10 cursor-pointer",
           isRoot ? "border-primary-500 shadow-primary-100" : planColors.border,
-          !isRoot && planColors.shadow
+          !isRoot && planColors.shadow,
+          isHighlighted && "ring-4 ring-primary-400 ring-offset-2 scale-110 shadow-xl"
         )}
       >
         <div className="flex flex-col items-center gap-0.5 sm:gap-1">
@@ -163,14 +147,10 @@ function TreeNodeComponent({
             <div
               className={cn(
                 "mt-1 sm:mt-2 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border",
-                node.currentPlan === "Basic" &&
-                  "bg-slate-50 border-slate-300 text-slate-700",
-                node.currentPlan === "Medium" &&
-                  "bg-blue-50 border-blue-300 text-blue-700",
-                node.currentPlan === "Large" &&
-                  "bg-purple-50 border-purple-300 text-purple-700",
-                node.currentPlan === "Premium" &&
-                  "bg-amber-50 border-amber-300 text-amber-700"
+                node.currentPlan === "Basic" && "bg-slate-50 border-slate-300 text-slate-700",
+                node.currentPlan === "Medium" && "bg-blue-50 border-blue-300 text-blue-700",
+                node.currentPlan === "Large" && "bg-purple-50 border-purple-300 text-purple-700",
+                node.currentPlan === "Premium" && "bg-amber-50 border-amber-300 text-amber-700"
               )}
             >
               <p className="text-[10px] sm:text-xs font-medium truncate max-w-[80px] sm:max-w-[120px]">
@@ -181,45 +161,32 @@ function TreeNodeComponent({
         </div>
       </div>
 
-      {/* Children */}
       {(node.left || node.right) && (
         <>
           <div className="w-0.5 h-4 sm:h-8 bg-border my-1 sm:my-2"></div>
           <div className="relative w-full">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-0.5 bg-border"></div>
             <div className="flex justify-around gap-2 sm:gap-8 pt-1 sm:pt-2">
-              {/* Left Child */}
               <div className="relative">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-4 sm:h-8 bg-border"></div>
                 <div className="pt-4 sm:pt-8">
                   {node.left ? (
-                    <TreeNodeComponent
-                      node={node.left}
-                      onNodeClick={onNodeClick}
-                    />
+                    <TreeNodeComponent node={node.left} onNodeClick={onNodeClick} highlightedId={highlightedId} />
                   ) : (
                     <div className="px-3 py-2 sm:px-6 sm:py-4 rounded-xl border-2 border-dashed border-border bg-muted/30 min-w-[100px] sm:min-w-[160px] flex items-center justify-center">
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">
-                        Empty
-                      </p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">Empty</p>
                     </div>
                   )}
                 </div>
               </div>
-              {/* Right Child */}
               <div className="relative">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-4 sm:h-8 bg-border"></div>
                 <div className="pt-4 sm:pt-8">
                   {node.right ? (
-                    <TreeNodeComponent
-                      node={node.right}
-                      onNodeClick={onNodeClick}
-                    />
+                    <TreeNodeComponent node={node.right} onNodeClick={onNodeClick} highlightedId={highlightedId} />
                   ) : (
                     <div className="px-3 py-2 sm:px-6 sm:py-4 rounded-xl border-2 border-dashed border-border bg-muted/30 min-w-[100px] sm:min-w-[160px] flex items-center justify-center">
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">
-                        Empty
-                      </p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">Empty</p>
                     </div>
                   )}
                 </div>
@@ -266,19 +233,14 @@ function UserDetailsModal({
         className="bg-card border border-border rounded-2xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="sticky top-0 bg-card border-b border-border p-4 sm:p-6 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary-500 flex items-center justify-center">
               <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-foreground">
-                User Details
-              </h2>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                Complete information
-              </p>
+              <h2 className="text-lg sm:text-xl font-bold text-foreground">User Details</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground">Complete information</p>
             </div>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
@@ -292,36 +254,21 @@ function UserDetailsModal({
           </div>
         ) : userDetails ? (
           <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-            {/* Basic Info */}
             <div className="bg-muted/30 rounded-xl p-3 sm:p-4">
-              <h3 className="font-semibold text-foreground mb-3 text-sm sm:text-base">
-                Basic Information
-              </h3>
+              <h3 className="font-semibold text-foreground mb-3 text-sm sm:text-base">Basic Information</h3>
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground">
-                    Name
-                  </p>
-                  <p className="text-xs sm:text-sm font-medium text-foreground">
-                    {userDetails.name}
-                  </p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Name</p>
+                  <p className="text-xs sm:text-sm font-medium text-foreground">{userDetails.name}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground">
-                    Username
-                  </p>
-                  <p className="text-xs sm:text-sm font-medium text-foreground">
-                    {userDetails.username}
-                  </p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Username</p>
+                  <p className="text-xs sm:text-sm font-medium text-foreground">{userDetails.username}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground">
-                    Referral ID
-                  </p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Referral ID</p>
                   <div className="flex items-center gap-1 sm:gap-2">
-                    <p className="text-xs sm:text-sm font-medium text-primary-600">
-                      {userDetails.referralId}
-                    </p>
+                    <p className="text-xs sm:text-sm font-medium text-primary-600">{userDetails.referralId}</p>
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(userDetails.referralId);
@@ -334,80 +281,44 @@ function UserDetailsModal({
                   </div>
                 </div>
                 <div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground">
-                    Status
-                  </p>
-                  <span
-                    className={cn(
-                      "inline-block px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium",
-                      userDetails.isActive
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    )}
-                  >
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Status</p>
+                  <span className={cn("inline-block px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium", userDetails.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
                     {userDetails.isActive ? "Active" : "Inactive"}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Contact Info */}
             <div className="bg-muted/30 rounded-xl p-3 sm:p-4">
-              <h3 className="font-semibold text-foreground mb-3 text-sm sm:text-base">
-                Contact
-              </h3>
+              <h3 className="font-semibold text-foreground mb-3 text-sm sm:text-base">Contact</h3>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Mail className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
-                  <p className="text-xs sm:text-sm text-foreground truncate">
-                    {userDetails.email}
-                  </p>
+                  <p className="text-xs sm:text-sm text-foreground truncate">{userDetails.email}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
-                  <p className="text-xs sm:text-sm text-foreground">
-                    {userDetails.mobile}
-                  </p>
+                  <p className="text-xs sm:text-sm text-foreground">{userDetails.mobile}</p>
                 </div>
               </div>
             </div>
 
-            {/* Sponsor Info */}
             {userDetails.sponsor && (
               <div className="bg-muted/30 rounded-xl p-3 sm:p-4">
-                <h3 className="font-semibold text-foreground mb-3 text-sm sm:text-base">
-                  Sponsor & Placement
-                </h3>
+                <h3 className="font-semibold text-foreground mb-3 text-sm sm:text-base">Sponsor & Placement</h3>
                 <div className="grid grid-cols-3 gap-2 sm:gap-4">
                   <div>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">
-                      Sponsor
-                    </p>
-                    <p className="text-xs sm:text-sm font-medium text-foreground truncate">
-                      {userDetails.sponsor.name}
-                    </p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Sponsor</p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground truncate">{userDetails.sponsor.name}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">
-                      Sponsor ID
-                    </p>
-                    <p className="text-xs sm:text-sm font-medium text-foreground">
-                      {userDetails.sponsor.referralId}
-                    </p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Sponsor ID</p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground">{userDetails.sponsor.referralId}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">
-                      Side
-                    </p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Side</p>
                     {userDetails.placement ? (
-                      <span
-                        className={cn(
-                          "inline-block px-1.5 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-xs font-medium border",
-                          userDetails.placement === "LEFT"
-                            ? "bg-blue-100 text-blue-800 border-blue-300"
-                            : "bg-purple-100 text-purple-800 border-purple-300"
-                        )}
-                      >
+                      <span className={cn("inline-block px-1.5 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-xs font-medium border", userDetails.placement === "LEFT" ? "bg-blue-100 text-blue-800 border-blue-300" : "bg-purple-100 text-purple-800 border-purple-300")}>
                         {userDetails.placement}
                       </span>
                     ) : (
@@ -418,195 +329,114 @@ function UserDetailsModal({
               </div>
             )}
 
-            {/* Plan Info */}
             {userDetails.currentPlan && (
               <div className="bg-primary-50 border border-primary-200 rounded-xl p-3 sm:p-4">
-                <h3 className="font-semibold text-primary-900 mb-3 text-sm sm:text-base">
-                  Current Plan
-                </h3>
+                <h3 className="font-semibold text-primary-900 mb-3 text-sm sm:text-base">Current Plan</h3>
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <p className="text-[10px] sm:text-xs text-primary-700">
-                      Plan
-                    </p>
-                    <p className="text-xs sm:text-sm font-medium text-primary-900">
-                      {userDetails.currentPlan.name}
-                    </p>
+                    <p className="text-[10px] sm:text-xs text-primary-700">Plan</p>
+                    <p className="text-xs sm:text-sm font-medium text-primary-900">{userDetails.currentPlan.name}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] sm:text-xs text-primary-700">
-                      Amount
-                    </p>
-                    <p className="text-xs sm:text-sm font-medium text-primary-900">
-                      ₹{userDetails.currentPlan.amount}
-                    </p>
+                    <p className="text-[10px] sm:text-xs text-primary-700">Amount</p>
+                    <p className="text-xs sm:text-sm font-medium text-primary-900">₹{userDetails.currentPlan.amount}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] sm:text-xs text-primary-700">
-                      PV
-                    </p>
-                    <p className="text-xs sm:text-sm font-medium text-primary-900">
-                      {userDetails.currentPlan.pv}
-                    </p>
+                    <p className="text-[10px] sm:text-xs text-primary-700">PV</p>
+                    <p className="text-xs sm:text-sm font-medium text-primary-900">{userDetails.currentPlan.pv}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] sm:text-xs text-primary-700">
-                      Daily Cap
-                    </p>
-                    <p className="text-xs sm:text-sm font-medium text-primary-900">
-                      ₹{userDetails.currentPlan.dailyCapping}
-                    </p>
+                    <p className="text-[10px] sm:text-xs text-primary-700">Daily Cap</p>
+                    <p className="text-xs sm:text-sm font-medium text-primary-900">₹{userDetails.currentPlan.dailyCapping}</p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Wallet */}
             <div className="bg-green-50 border border-green-200 rounded-xl p-3 sm:p-4">
               <h3 className="font-semibold text-green-900 mb-3 flex items-center gap-2 text-sm sm:text-base">
-                <Wallet className="w-3 h-3 sm:w-4 sm:h-4" />
-                Wallet
+                <Wallet className="w-3 h-3 sm:w-4 sm:h-4" /> Wallet
               </h3>
               <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 <div>
-                  <p className="text-[10px] sm:text-xs text-green-700">
-                    Balance
-                  </p>
-                  <p className="text-sm sm:text-lg font-bold text-green-900">
-                    ₹{userDetails.wallet.balance}
-                  </p>
+                  <p className="text-[10px] sm:text-xs text-green-700">Balance</p>
+                  <p className="text-sm sm:text-lg font-bold text-green-900">₹{userDetails.wallet.balance}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] sm:text-xs text-green-700">
-                    Earnings
-                  </p>
-                  <p className="text-sm sm:text-lg font-bold text-green-900">
-                    ₹{userDetails.wallet.totalEarnings}
-                  </p>
+                  <p className="text-[10px] sm:text-xs text-green-700">Earnings</p>
+                  <p className="text-sm sm:text-lg font-bold text-green-900">₹{userDetails.wallet.totalEarnings}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] sm:text-xs text-green-700">
-                    Withdrawn
-                  </p>
-                  <p className="text-sm sm:text-lg font-bold text-green-900">
-                    ₹{userDetails.wallet.totalWithdrawals}
-                  </p>
+                  <p className="text-[10px] sm:text-xs text-green-700">Withdrawn</p>
+                  <p className="text-sm sm:text-lg font-bold text-green-900">₹{userDetails.wallet.totalWithdrawals}</p>
                 </div>
               </div>
             </div>
 
-            {/* Income Breakdown */}
             {userDetails.incomeBreakdown && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-4">
                 <h3 className="font-semibold text-amber-900 mb-3 flex items-center gap-2 text-sm sm:text-base">
-                  <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
-                  Income
+                  <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" /> Income
                 </h3>
                 <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                  {/* <div>
-                    <p className="text-[10px] sm:text-xs text-amber-700">
-                      Referral
-                    </p>
-                    <p className="text-sm sm:text-lg font-bold text-amber-900">
-                      ₹{userDetails.incomeBreakdown.REFERRAL_INCOME || 0}
-                    </p>
-                  </div> */}
                   <div>
-                    <p className="text-[10px] sm:text-xs text-amber-700">
-                      Matching
-                    </p>
-                    <p className="text-sm sm:text-lg font-bold text-amber-900">
-                      ₹{userDetails.incomeBreakdown.MATCHING_INCOME || 0}
-                    </p>
+                    <p className="text-[10px] sm:text-xs text-amber-700">Matching</p>
+                    <p className="text-sm sm:text-lg font-bold text-amber-900">₹{userDetails.incomeBreakdown.MATCHING_INCOME || 0}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] sm:text-xs text-amber-700">
-                      Level
-                    </p>
-                    <p className="text-sm sm:text-lg font-bold text-amber-900">
-                      ₹{userDetails.incomeBreakdown.LEVEL_INCOME || 0}
-                    </p>
+                    <p className="text-[10px] sm:text-xs text-amber-700">Level</p>
+                    <p className="text-sm sm:text-lg font-bold text-amber-900">₹{userDetails.incomeBreakdown.LEVEL_INCOME || 0}</p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* PV Stats */}
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 sm:p-4">
               <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2 text-sm sm:text-base">
-                <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
-                PV Stats
+                <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" /> PV Stats
               </h3>
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <p className="text-[10px] sm:text-xs text-blue-700">
-                    Left PV
-                  </p>
-                  <p className="text-sm sm:text-lg font-bold text-blue-900">
-                    {userDetails.pv.leftPV}
-                  </p>
+                  <p className="text-[10px] sm:text-xs text-blue-700">Left PV</p>
+                  <p className="text-sm sm:text-lg font-bold text-blue-900">{userDetails.pv.leftPV}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] sm:text-xs text-blue-700">
-                    Right PV
-                  </p>
-                  <p className="text-sm sm:text-lg font-bold text-blue-900">
-                    {userDetails.pv.rightPV}
-                  </p>
+                  <p className="text-[10px] sm:text-xs text-blue-700">Right PV</p>
+                  <p className="text-sm sm:text-lg font-bold text-blue-900">{userDetails.pv.rightPV}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] sm:text-xs text-blue-700">
-                    Total PV
-                  </p>
-                  <p className="text-sm sm:text-lg font-bold text-blue-900">
-                    {userDetails.pv.totalPV}
-                  </p>
+                  <p className="text-[10px] sm:text-xs text-blue-700">Total PV</p>
+                  <p className="text-sm sm:text-lg font-bold text-blue-900">{userDetails.pv.totalPV}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] sm:text-xs text-blue-700">
-                    Daily Used
-                  </p>
-                  <p className="text-sm sm:text-lg font-bold text-blue-900">
-                    {userDetails.pv.dailyPVUsed || 0}
-                  </p>
+                  <p className="text-[10px] sm:text-xs text-blue-700">Daily Used</p>
+                  <p className="text-sm sm:text-lg font-bold text-blue-900">{userDetails.pv.dailyPVUsed || 0}</p>
                 </div>
               </div>
             </div>
 
-            {/* Activity */}
             <div className="bg-muted/30 rounded-xl p-3 sm:p-4">
               <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2 text-sm sm:text-base">
-                <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-                Activity
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4" /> Activity
               </h3>
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground">
-                    Joined
-                  </p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Joined</p>
                   <p className="text-[10px] sm:text-sm font-medium text-foreground">
-                    {new Date(userDetails.joinedAt).toLocaleString("en-IN", {
-                      timeZone: "Asia/Kolkata",
-                    })}
+                    {new Date(userDetails.joinedAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground">
-                    Last Active
-                  </p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Last Active</p>
                   <p className="text-[10px] sm:text-sm font-medium text-foreground">
-                    {new Date(userDetails.lastActive).toLocaleString("en-IN", {
-                      timeZone: "Asia/Kolkata",
-                    })}
+                    {new Date(userDetails.lastActive).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
                   </p>
                 </div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="p-8 text-center text-muted-foreground">
-            Failed to load user details
-          </div>
+          <div className="p-8 text-center text-muted-foreground">Failed to load user details</div>
         )}
       </div>
     </div>
@@ -618,9 +448,13 @@ export default function AdminBinaryTreePage() {
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [showLegend, setShowLegend] = useState(false);
+  const [searchId, setSearchId] = useState("");
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const treeWrapperRef = useRef<HTMLDivElement>(null);
 
   // Zoom and Pan state
-  const [zoom, setZoom] = useState(0.8); // Start smaller on mobile
+  const [zoom, setZoom] = useState(0.8);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [isSpacePressed, setIsSpacePressed] = useState(false);
@@ -629,57 +463,49 @@ export default function AdminBinaryTreePage() {
 
   // Touch state for mobile
   const [isTouchPanning, setIsTouchPanning] = useState(false);
-  const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(
-    null
-  );
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
-  // Keyboard handlers (desktop)
+  // Keyboard handlers
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Space" && !isSpacePressed) {
-        e.preventDefault();
-        setIsSpacePressed(true);
-      }
+      if (e.code === "Space" && !isSpacePressed) { e.preventDefault(); setIsSpacePressed(true); }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === "Space") {
-        e.preventDefault();
-        setIsSpacePressed(false);
-        setIsPanning(false);
-      }
+      if (e.code === "Space") { e.preventDefault(); setIsSpacePressed(false); setIsPanning(false); }
     };
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
+    return () => { window.removeEventListener("keydown", handleKeyDown); window.removeEventListener("keyup", handleKeyUp); };
   }, [isSpacePressed]);
 
-  // Wheel handler (desktop zoom/scroll)
+  // Wheel handler — scroll to pan, Ctrl+scroll to zoom towards cursor
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
-      const treeContainer = document.getElementById("tree-container");
-      if (!treeContainer?.contains(e.target as Node)) return;
+      const container = document.getElementById("tree-container");
+      if (!container?.contains(e.target as Node)) return;
+      e.preventDefault();
       if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        setZoom((prev) =>
-          Math.max(0.3, Math.min(3, prev + (e.deltaY > 0 ? -0.1 : 0.1)))
-        );
+        const rect = container.getBoundingClientRect();
+        const cx = e.clientX - rect.left - rect.width / 2;
+        const cy = e.clientY - rect.top - rect.height / 2;
+        const delta = e.deltaY > 0 ? -0.05 : 0.05;
+        setZoom((prev) => {
+          const newZoom = Math.max(0.2, Math.min(3, prev + delta));
+          const ratio = newZoom / prev;
+          setPan((p) => ({
+            x: cx - ratio * (cx - p.x),
+            y: cy - ratio * (cy - p.y),
+          }));
+          return newZoom;
+        });
       } else {
-        e.preventDefault();
-        setPan((prev) => ({ x: prev.x, y: prev.y - e.deltaY * 0.5 }));
+        setPan((prev) => ({ x: prev.x - e.deltaX * 0.8, y: prev.y - e.deltaY * 0.8 }));
       }
     };
     window.addEventListener("wheel", handleWheel, { passive: false });
-    return () => {
-      window.removeEventListener("wheel", handleWheel);
-    };
+    return () => window.removeEventListener("wheel", handleWheel);
   }, []);
 
   // Fetch tree data
@@ -687,48 +513,64 @@ export default function AdminBinaryTreePage() {
     if (!mounted) return;
     axiosInstance
       .get("/api/user/team/tree")
-      .then((res) => {
-        if (res.data.success) setTreeData(res.data.data);
-      })
+      .then((res) => { if (res.data.success) setTreeData(res.data.data); })
       .catch((err) => console.error("Error fetching tree:", err))
       .finally(() => setLoading(false));
   }, [mounted]);
 
   const handleNodeClick = (nodeId: string) => {
-    if (!isPanning && !isSpacePressed && !isTouchPanning)
-      setSelectedUserId(nodeId);
+    if (!isPanning && !isSpacePressed && !isTouchPanning) setSelectedUserId(nodeId);
   };
 
-  // Zoom controls
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.2, 3));
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.2, 0.3));
-  const handleResetView = () => {
-    setZoom(0.8);
-    setPan({ x: 0, y: 0 });
-  };
+  // Search: find node by referral ID and pan to center it
+  const handleSearch = () => {
+    const query = searchId.trim().toUpperCase();
+    if (!query) return;
+    const container = document.getElementById("tree-container");
+    if (!container || !treeWrapperRef.current) return;
 
-  // Mouse pan (desktop with space)
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (isSpacePressed) {
-      setIsPanning(true);
-      setDragStart({ x: e.clientX, y: e.clientY });
-      setDragOffset(pan);
+    const node = treeWrapperRef.current.querySelector(`[data-referral-id="${query}"]`) as HTMLElement;
+    if (!node) {
+      toast.error(`Member "${query}" not found in tree`);
+      setHighlightedId(null);
+      return;
     }
+
+    // Get node's screen position and convert to natural (unscaled) offset from container center
+    const containerRect = container.getBoundingClientRect();
+    const nodeRect = node.getBoundingClientRect();
+    const nodeCenterX = nodeRect.left + nodeRect.width / 2;
+    const nodeCenterY = nodeRect.top + nodeRect.height / 2;
+    const containerCenterX = containerRect.left + containerRect.width / 2;
+    const containerCenterY = containerRect.top + containerRect.height / 2;
+
+    // Reverse the current transform to get the node's natural offset
+    const naturalX = (nodeCenterX - containerCenterX - pan.x) / zoom;
+    const naturalY = (nodeCenterY - containerCenterY - pan.y) / zoom;
+
+    // At zoom=1, pan to center the node
+    setPan({ x: -naturalX, y: -naturalY });
+    setZoom(1);
+    setHighlightedId(query);
+    setTimeout(() => setHighlightedId(null), 3000);
+  };
+
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.15, 3));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.15, 0.2));
+  const handleResetView = () => { setZoom(0.8); setPan({ x: 0, y: 0 }); };
+
+  // Mouse pan (space + drag)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (isSpacePressed) { setIsPanning(true); setDragStart({ x: e.clientX, y: e.clientY }); setDragOffset(pan); }
   };
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isPanning && isSpacePressed) {
-      setPan({
-        x: dragOffset.x + e.clientX - dragStart.x,
-        y: dragOffset.y + e.clientY - dragStart.y,
-      });
+      setPan({ x: dragOffset.x + e.clientX - dragStart.x, y: dragOffset.y + e.clientY - dragStart.y });
     }
   };
   const handleMouseUp = () => setIsPanning(false);
-  const handleContextMenu = (e: React.MouseEvent) => {
-    if (isSpacePressed) e.preventDefault();
-  };
 
-  // Touch handlers (mobile)
+  // Touch handlers
   const getTouchDistance = (touches: React.TouchList) => {
     if (touches.length < 2) return null;
     const dx = touches[0].clientX - touches[1].clientX;
@@ -736,36 +578,28 @@ export default function AdminBinaryTreePage() {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent) => {
-      if (e.touches.length === 1) {
-        setIsTouchPanning(true);
-        setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
-        setDragOffset(pan);
-      } else if (e.touches.length === 2) {
-        setLastTouchDistance(getTouchDistance(e.touches));
-      }
-    },
-    [pan]
-  );
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setIsTouchPanning(true);
+      setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+      setDragOffset(pan);
+    } else if (e.touches.length === 2) {
+      setLastTouchDistance(getTouchDistance(e.touches));
+    }
+  }, [pan]);
 
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      if (e.touches.length === 1 && isTouchPanning) {
-        const deltaX = e.touches[0].clientX - dragStart.x;
-        const deltaY = e.touches[0].clientY - dragStart.y;
-        setPan({ x: dragOffset.x + deltaX, y: dragOffset.y + deltaY });
-      } else if (e.touches.length === 2 && lastTouchDistance !== null) {
-        const newDistance = getTouchDistance(e.touches);
-        if (newDistance) {
-          const scale = newDistance / lastTouchDistance;
-          setZoom((prev) => Math.max(0.3, Math.min(3, prev * scale)));
-          setLastTouchDistance(newDistance);
-        }
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 1 && isTouchPanning) {
+      setPan({ x: dragOffset.x + e.touches[0].clientX - dragStart.x, y: dragOffset.y + e.touches[0].clientY - dragStart.y });
+    } else if (e.touches.length === 2 && lastTouchDistance !== null) {
+      const newDist = getTouchDistance(e.touches);
+      if (newDist) {
+        const scale = newDist / lastTouchDistance;
+        setZoom((prev) => Math.max(0.2, Math.min(3, prev * scale)));
+        setLastTouchDistance(newDist);
       }
-    },
-    [isTouchPanning, dragStart, dragOffset, lastTouchDistance]
-  );
+    }
+  }, [isTouchPanning, dragStart, dragOffset, lastTouchDistance]);
 
   const handleTouchEnd = useCallback(() => {
     setIsTouchPanning(false);
@@ -774,18 +608,16 @@ export default function AdminBinaryTreePage() {
 
   if (loading) {
     return (
-      <PageContainer maxWidth="full">
+      <div className="p-4 sm:p-6 lg:p-8">
         <SkeletonHeader />
-        <div className="flex justify-center py-12">
-          <SkeletonTreeNode />
-        </div>
-      </PageContainer>
+        <div className="flex justify-center py-12"><SkeletonTreeNode /></div>
+      </div>
     );
   }
 
   if (!treeData) {
     return (
-      <PageContainer maxWidth="full">
+      <div className="p-4 sm:p-6 lg:p-8">
         <PageHeader
           icon={<Network className="w-6 h-6 text-white" />}
           title="Binary Tree View"
@@ -793,59 +625,96 @@ export default function AdminBinaryTreePage() {
         />
         <div className="bg-card border border-border rounded-xl p-8 sm:p-12 text-center">
           <Network className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground mx-auto mb-4" />
-          <p className="text-base sm:text-lg text-muted-foreground">
-            No team data available
-          </p>
+          <p className="text-base sm:text-lg text-muted-foreground">No team data available</p>
         </div>
-      </PageContainer>
+      </div>
     );
   }
 
   return (
-    <PageContainer maxWidth="full">
-      <PageHeader
-        icon={<Network className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
-        title="Binary Tree View"
-        subtitle="Tap nodes for details • Drag to pan • Pinch to zoom"
-        action={
-          <div className="flex gap-1 sm:gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 sm:h-10 sm:w-10"
-              onClick={handleZoomIn}
-              disabled={zoom >= 3}
-            >
-              <ZoomIn className="w-3 h-3 sm:w-4 sm:h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 sm:h-10 sm:w-10"
-              onClick={handleZoomOut}
-              disabled={zoom <= 0.3}
-            >
-              <ZoomOut className="w-3 h-3 sm:w-4 sm:h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 sm:h-10 sm:w-10"
-              onClick={handleResetView}
-              title="Reset"
-            >
-              <Maximize className="w-3 h-3 sm:w-4 sm:h-4" />
-            </Button>
-          </div>
-        }
-      />
+    <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden">
+      {/* Header */}
+      <div className="flex-shrink-0 p-4 sm:px-6 sm:pt-6 sm:pb-0">
+        <PageHeader
+          icon={<Network className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
+          title="Binary Tree View"
+          subtitle="Scroll to pan • Ctrl+scroll to zoom • Click nodes for details"
+          action={
+            <div className="flex gap-1 sm:gap-2">
+              {/* Info toggle */}
+              <Button
+                variant={showLegend ? "default" : "outline"}
+                size="icon"
+                className="h-8 w-8 sm:h-10 sm:w-10"
+                onClick={() => setShowLegend((v) => !v)}
+              >
+                <Info className="w-3 h-3 sm:w-4 sm:h-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={handleZoomIn} disabled={zoom >= 3}>
+                <ZoomIn className="w-3 h-3 sm:w-4 sm:h-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={handleZoomOut} disabled={zoom <= 0.2}>
+                <ZoomOut className="w-3 h-3 sm:w-4 sm:h-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={handleResetView} title="Reset">
+                <Maximize className="w-3 h-3 sm:w-4 sm:h-4" />
+              </Button>
+            </div>
+          }
+        />
+      </div>
 
-      {/* Tree Container */}
+      {/* Search bar */}
+      <div className="flex-shrink-0 mx-4 sm:mx-6 mb-2">
+        <form
+          onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
+          className="flex gap-2"
+        >
+          <div className="relative flex-1 max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by Referral ID..."
+              value={searchId}
+              onChange={(e) => setSearchId(e.target.value)}
+              className="pl-9 h-9"
+            />
+          </div>
+          <Button type="submit" size="sm" className="h-9">
+            Find
+          </Button>
+        </form>
+      </div>
+
+      {/* Legend panel - collapsible */}
+      {showLegend && (
+        <div className="flex-shrink-0 mx-4 sm:mx-6 mb-2 bg-card border border-border rounded-xl p-3 shadow-sm">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs sm:text-sm">
+            <div className="flex items-center gap-4">
+              <span className="font-semibold text-foreground">Status:</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green-500" />Active</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500" />Inactive</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="font-semibold text-foreground">Side:</span>
+              <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded-full bg-blue-500 text-[8px] font-bold text-white flex items-center justify-center">L</span>Left</span>
+              <span className="flex items-center gap-1.5"><span className="w-4 h-4 rounded-full bg-purple-500 text-[8px] font-bold text-white flex items-center justify-center">R</span>Right</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="font-semibold text-foreground">Plans:</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-slate-400" />Basic</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-blue-500" />Medium</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-purple-500" />Large</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-amber-500" />Premium</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tree Container - fills remaining space, no page scroll */}
       <div
         id="tree-container"
-        ref={containerRef}
         className={cn(
-          "bg-muted/30 border border-border rounded-xl sm:rounded-2xl overflow-hidden min-h-[400px] sm:min-h-[600px] flex flex-col items-center justify-center relative select-none touch-none",
+          "flex-1 min-h-0 mx-4 sm:mx-6 mb-4 sm:mb-6 bg-muted/30 border border-border rounded-xl sm:rounded-2xl overflow-hidden flex flex-col items-center justify-center relative select-none touch-none",
           isSpacePressed ? "cursor-grab" : "cursor-default",
           isPanning ? "cursor-grabbing" : ""
         )}
@@ -853,12 +722,12 @@ export default function AdminBinaryTreePage() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        onContextMenu={handleContextMenu}
+        onContextMenu={(e) => { if (isSpacePressed) e.preventDefault(); }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Background Grid */}
+        {/* Dot grid background */}
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{
@@ -868,136 +737,32 @@ export default function AdminBinaryTreePage() {
           }}
         />
 
-        {/* Zoom Indicator */}
+        {/* Zoom indicator */}
         <div className="absolute top-2 left-2 sm:top-4 sm:left-4 bg-card border border-border rounded-lg px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium text-foreground z-20">
           {Math.round(zoom * 100)}%
         </div>
 
-        {/* Mobile Pan Hint */}
-        <div className="absolute top-2 right-2 sm:hidden bg-card/80 border border-border rounded-lg px-2 py-0.5 text-[10px] font-medium text-muted-foreground z-20 flex items-center gap-1">
-          <Move className="w-3 h-3" /> Drag to pan
-        </div>
-
-        {/* Desktop Pan Mode Indicator */}
+        {/* Space pan indicator */}
         {isSpacePressed && (
-          <div className="absolute top-4 right-4 bg-primary-500 text-white rounded-lg px-3 py-1 text-sm font-medium z-20 hidden sm:flex items-center gap-2">
-            <span>🖐️</span>Pan Mode
+          <div className="absolute top-4 right-4 bg-primary-500 text-white rounded-lg px-3 py-1 text-sm font-medium z-20 hidden sm:block">
+            Pan Mode
           </div>
         )}
 
+        {/* Tree content */}
         <div
-          className="flex justify-center min-w-max z-10 transition-transform duration-150 ease-out p-4 sm:p-8"
+          ref={treeWrapperRef}
+          className="flex justify-center min-w-max z-10 p-4 sm:p-8"
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
             transformOrigin: "center center",
           }}
         >
-          <TreeNodeComponent
-            node={treeData}
-            isRoot={true}
-            onNodeClick={handleNodeClick}
-          />
+          <TreeNodeComponent node={treeData} isRoot={true} onNodeClick={handleNodeClick} highlightedId={highlightedId} />
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="mt-4 sm:mt-6 bg-card border border-border rounded-xl p-3 sm:p-4 shadow-sm">
-        <div className="flex flex-col gap-3">
-          {/* Status Legend */}
-          <div className="flex flex-wrap gap-3 sm:gap-6 items-center">
-            <span className="text-xs sm:text-sm font-semibold text-foreground">
-              Status:
-            </span>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-500"></div>
-              <span className="text-xs sm:text-sm text-muted-foreground">
-                Active
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500"></div>
-              <span className="text-xs sm:text-sm text-muted-foreground">
-                Inactive
-              </span>
-            </div>
-          </div>
-
-          {/* Side Legend */}
-          <div className="flex flex-wrap gap-3 sm:gap-6 items-center">
-            <span className="text-xs sm:text-sm font-semibold text-foreground">
-              Side:
-            </span>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-500 flex items-center justify-center text-[8px] sm:text-[10px] font-bold text-white">
-                L
-              </div>
-              <span className="text-xs sm:text-sm text-muted-foreground">
-                Left
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-purple-500 flex items-center justify-center text-[8px] sm:text-[10px] font-bold text-white">
-                R
-              </div>
-              <span className="text-xs sm:text-sm text-muted-foreground">
-                Right
-              </span>
-            </div>
-          </div>
-
-          {/* Plan Legend */}
-          <div className="flex flex-wrap gap-3 sm:gap-6 items-center">
-            <span className="text-xs sm:text-sm font-semibold text-foreground">
-              Plans:
-            </span>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-slate-400"></div>
-              <span className="text-xs sm:text-sm text-muted-foreground">
-                Basic
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-blue-500"></div>
-              <span className="text-xs sm:text-sm text-muted-foreground">
-                Medium
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-purple-500"></div>
-              <span className="text-xs sm:text-sm text-muted-foreground">
-                Large
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-amber-500"></div>
-              <span className="text-xs sm:text-sm text-muted-foreground">
-                Premium
-              </span>
-            </div>
-          </div>
-
-          {/* Controls hint - desktop only */}
-          <div className="hidden sm:flex flex-wrap gap-4 text-xs text-muted-foreground border-t border-border pt-3">
-            <div className="flex items-center gap-1">
-              <span>💡</span>
-              <span>Click for details</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span>⌨️</span>
-              <span>SPACE + drag</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span>🔍</span>
-              <span>Ctrl+scroll zoom</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <UserDetailsModal
-        userId={selectedUserId}
-        onClose={() => setSelectedUserId(null)}
-      />
-    </PageContainer>
+      <UserDetailsModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
+    </div>
   );
 }
