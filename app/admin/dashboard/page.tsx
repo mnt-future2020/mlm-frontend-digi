@@ -85,8 +85,9 @@ export default function AdminDashboard() {
         <StatsCard
           label="Total Users"
           value={String(stats?.overview?.totalUsers || 0)}
-          icon={<Users className="w-6 h-6 text-primary-600" />}
-          gradient="bg-primary-500"
+          icon={<Users className="w-6 h-6 text-blue-600" />}
+          gradient="bg-blue-500"
+          className="bg-blue-50 border-blue-200"
           trend={{ value: `${stats?.overview?.activeUsers || 0} active`, isPositive: true }}
         />
         <StatsCard
@@ -94,6 +95,7 @@ export default function AdminDashboard() {
           value={String(stats?.overview?.activeUsers || 0)}
           icon={<TrendingUp className="w-6 h-6 text-green-600" />}
           gradient="bg-green-500"
+          className="bg-green-50 border-green-200"
           trend={{ value: `${stats?.overview?.inactiveUsers || 0} inactive`, isPositive: false }}
         />
         <StatsCard
@@ -101,6 +103,7 @@ export default function AdminDashboard() {
           value={String(stats?.overview?.withPlans || 0)}
           icon={<Package className="w-6 h-6 text-purple-600" />}
           gradient="bg-purple-500"
+          className="bg-purple-50 border-purple-200"
           trend={{ value: "Active memberships", isPositive: true }}
         />
         <StatsCard
@@ -108,56 +111,57 @@ export default function AdminDashboard() {
           value={`₹${(stats?.overview?.netProfit || 0).toLocaleString()}`}
           icon={<Wallet className="w-6 h-6 text-emerald-600" />}
           gradient="bg-emerald-500"
-          trend={{ 
-            value: `Revenue: ₹${(stats?.overview?.totalRevenue || 0).toLocaleString()}`, 
-            isPositive: (stats?.overview?.netProfit || 0) > 0 
+          className="bg-emerald-50 border-emerald-200"
+          trend={{
+            value: `Revenue: ₹${(stats?.overview?.totalRevenue || 0).toLocaleString()}`,
+            isPositive: (stats?.overview?.netProfit || 0) > 0
           }}
         />
       </div>
 
       {/* Admin Team Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Left PV</p>
-              <p className="text-2xl font-bold text-blue-600">{stats?.adminTeam?.leftPV || 0}</p>
+              <p className="text-sm text-blue-600/70">Left PV</p>
+              <p className="text-2xl font-bold text-blue-700">{stats?.adminTeam?.leftPV || 0}</p>
             </div>
           </div>
         </div>
-        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-indigo-600" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Right PV</p>
-              <p className="text-2xl font-bold text-indigo-600">{stats?.adminTeam?.rightPV || 0}</p>
+              <p className="text-sm text-indigo-600/70">Right PV</p>
+              <p className="text-2xl font-bold text-indigo-700">{stats?.adminTeam?.rightPV || 0}</p>
             </div>
           </div>
         </div>
-        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
               <Users className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Left Team</p>
-              <p className="text-2xl font-bold text-green-600">{stats?.adminTeam?.leftTeam || 0}</p>
+              <p className="text-sm text-green-600/70">Left Team</p>
+              <p className="text-2xl font-bold text-green-700">{stats?.adminTeam?.leftTeam || 0}</p>
             </div>
           </div>
         </div>
-        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+        <div className="bg-purple-50 border border-purple-200 rounded-xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
               <Users className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Right Team</p>
-              <p className="text-2xl font-bold text-purple-600">{stats?.adminTeam?.rightTeam || 0}</p>
+              <p className="text-sm text-purple-600/70">Right Team</p>
+              <p className="text-2xl font-bold text-purple-700">{stats?.adminTeam?.rightTeam || 0}</p>
             </div>
           </div>
         </div>
@@ -170,12 +174,26 @@ export default function AdminDashboard() {
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {stats?.planDistribution && Object.entries(stats.planDistribution).map(([plan, count]) => (
-              <div key={plan} className="p-4 bg-muted/30 rounded-lg text-center">
-                <p className="text-sm text-muted-foreground mb-1">{plan}</p>
-                <p className="text-2xl font-bold text-foreground">{count}</p>
-              </div>
-            ))}
+            {stats?.planDistribution && Object.entries(stats.planDistribution).map(([plan, count]) => {
+              const planColor = {
+                Basic: "bg-slate-50 border-slate-200 text-slate-600",
+                Medium: "bg-blue-50 border-blue-200 text-blue-600",
+                Large: "bg-purple-50 border-purple-200 text-purple-600",
+                Premium: "bg-amber-50 border-amber-200 text-amber-600",
+              }[plan] || "bg-muted/30 border-border text-muted-foreground";
+              const valueColor = {
+                Basic: "text-slate-700",
+                Medium: "text-blue-700",
+                Large: "text-purple-700",
+                Premium: "text-amber-700",
+              }[plan] || "text-foreground";
+              return (
+                <div key={plan} className={`p-4 rounded-lg text-center border ${planColor}`}>
+                  <p className="text-sm font-medium mb-1">{plan}</p>
+                  <p className={`text-2xl font-bold ${valueColor}`}>{count}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
