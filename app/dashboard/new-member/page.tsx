@@ -574,35 +574,56 @@ export default function NewMemberPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="bg-white p-6 rounded-t-2xl relative overflow-hidden border-b border-border">
-              {/* Infinity symbol - top right decorative */}
-              <div className="absolute top-3 right-12">
-                <Infinity
-                  className="w-12 h-12 text-purple-500 opacity-60"
-                  strokeWidth={2}
+            <div className="bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 p-8 rounded-t-2xl relative overflow-hidden">
+              {/* Background logo watermark */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-[0.08]">
+                <img
+                  src="/assets/images/logo/vsv-unite-new.jpeg"
+                  alt=""
+                  className="w-72 h-72 object-contain"
                 />
               </div>
+
+              {/* Infinity symbols pattern */}
+              <div className="absolute -top-4 -left-4 animate-pulse">
+                <Infinity className="w-20 h-20 text-white/10" strokeWidth={1.5} />
+              </div>
+              <div className="absolute top-2 right-16 animate-pulse" style={{ animationDelay: '1s' }}>
+                <Infinity className="w-14 h-14 text-white/15 rotate-12" strokeWidth={1.5} />
+              </div>
+              <div className="absolute bottom-2 left-8 animate-pulse" style={{ animationDelay: '0.5s' }}>
+                <Infinity className="w-10 h-10 text-white/10 -rotate-12" strokeWidth={2} />
+              </div>
+              <div className="absolute bottom-0 right-4 animate-pulse" style={{ animationDelay: '1.5s' }}>
+                <Infinity className="w-16 h-16 text-white/10 rotate-45" strokeWidth={1} />
+              </div>
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                <Infinity className="w-48 h-48 text-white/[0.04]" strokeWidth={1} />
+              </div>
+
+              {/* Close button */}
               <button
                 onClick={() => setShowWelcomeModal(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-20"
+                className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors z-20"
               >
                 <X className="w-6 h-6" />
               </button>
+
               <div className="flex flex-col items-center text-center relative z-10">
-                {/* Logo Image */}
-                <div className="w-32 h-32 flex items-center justify-center mb-4">
+                {/* Logo */}
+                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 shadow-xl ring-4 ring-white/30">
                   <img
                     src="/assets/images/logo/vsv-unite-new.jpeg"
                     alt="VSV Logo"
-                    className="w-full h-full object-contain"
+                    className="w-16 h-16 object-contain rounded-full"
                   />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-1">
+                <h2 className="text-2xl font-bold text-white mb-1">
                   Registration Successful!
                 </h2>
-                <p className="text-gray-500 text-sm">
+                <p className="text-green-50 text-sm">
                   Welcome{" "}
-                  <span className="font-semibold text-purple-600">
+                  <span className="font-semibold text-white">
                     {newUserData.name}
                   </span>{" "}
                   to the team
