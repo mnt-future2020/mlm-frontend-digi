@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,8 +11,29 @@ import { useRouter } from "next/navigation";
 import { axiosInstance } from "@/lib/api";
 import { useAuth } from "@/contexts/auth-context";
 
+function formatCount(num: number): string {
+  if (num >= 10000000) return `${(num / 10000000).toFixed(1)}Cr+`;
+  if (num >= 100000) return `${(num / 100000).toFixed(1)}L+`;
+  if (num >= 1000) return `${(num / 1000).toFixed(0)}K+`;
+  return `${num}+`;
+}
+
+function formatCurrency(num: number): string {
+  if (num >= 10000000) return `₹${(num / 10000000).toFixed(1)}Cr+`;
+  if (num >= 100000) return `₹${(num / 100000).toFixed(1)}L+`;
+  if (num >= 1000) return `₹${(num / 1000).toFixed(0)}K+`;
+  return `₹${num}`;
+}
+
 export default function LoginPage() {
   const router = useRouter();
+  const [stats, setStats] = useState({ totalMembers: 0, activeMembers: 0, totalPayouts: 0 });
+
+  useEffect(() => {
+    axiosInstance.get("/api/stats/public").then((res) => {
+      if (res.data.success) setStats(res.data.data);
+    }).catch(() => {});
+  }, []);
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -163,26 +184,26 @@ export default function LoginPage() {
           >
             <div>
               <div className="text-2xl lg:text-4xl font-bold text-white">
-                10K+
+                {formatCount(stats.totalMembers)}
+              </div>
+              <div className="text-white/60 text-xs lg:text-sm">
+                Total Members
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl lg:text-4xl font-bold text-white">
+                {formatCurrency(stats.totalPayouts)}
+              </div>
+              <div className="text-white/60 text-xs lg:text-sm">
+                Total Payouts
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl lg:text-4xl font-bold text-white">
+                {formatCount(stats.activeMembers)}
               </div>
               <div className="text-white/60 text-xs lg:text-sm">
                 Active Members
-              </div>
-            </div>
-            <div>
-              <div className="text-2xl lg:text-4xl font-bold text-white">
-                ₹50Cr+
-              </div>
-              <div className="text-white/60 text-xs lg:text-sm">
-                Total Invested
-              </div>
-            </div>
-            <div>
-              <div className="text-2xl lg:text-4xl font-bold text-white">
-                99%
-              </div>
-              <div className="text-white/60 text-xs lg:text-sm">
-                Satisfaction
               </div>
             </div>
           </motion.div>

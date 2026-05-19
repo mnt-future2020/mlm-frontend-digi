@@ -39,6 +39,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PageContainer, PageHeader } from "@/components/ui/page-components";
+import { SkeletonHeader, SkeletonVideoCard } from "@/components/ui/skeleton";
 import { axiosInstance } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -245,6 +246,19 @@ export default function TutorialManagementPage() {
       toast.error(error.response?.data?.detail || "Delete failed");
     }
   };
+
+  if (loading) {
+    return (
+      <PageContainer maxWidth="full">
+        <SkeletonHeader />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonVideoCard key={i} />
+          ))}
+        </div>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer maxWidth="full">

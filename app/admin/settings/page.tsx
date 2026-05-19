@@ -13,6 +13,7 @@ import { getEmailConfiguration, updateEmailConfiguration, testEmailConfiguration
 import { ImageUpload } from "@/components/ui/image-upload";
 import { RanksTab } from "@/components/settings/RanksTab";
 import { axiosInstance } from "@/lib/api";
+import { SkeletonHeader, SkeletonSettingsSection } from "@/components/ui/skeleton";
 
 type TabType = "general" | "seo" | "hero" | "email" | "ranks";
 
@@ -219,11 +220,11 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <PageContainer maxWidth="full">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-primary-400 mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading settings...</p>
-          </div>
+        <SkeletonHeader />
+        <div className="space-y-6">
+          <SkeletonSettingsSection />
+          <SkeletonSettingsSection />
+          <SkeletonSettingsSection />
         </div>
       </PageContainer>
     );

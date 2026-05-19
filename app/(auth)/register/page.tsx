@@ -499,14 +499,14 @@ function RegisterPageContent() {
               >
                 I agree to the{" "}
                 <Link
-                  href="/terms"
+                  href="/contact"
                   className="text-primary-500 hover:underline"
                 >
                   Terms of Service
                 </Link>{" "}
                 and{" "}
                 <Link
-                  href="/privacy"
+                  href="/contact"
                   className="text-primary-500 hover:underline"
                 >
                   Privacy Policy

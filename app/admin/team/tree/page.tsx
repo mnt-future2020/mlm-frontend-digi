@@ -21,6 +21,7 @@ import { PageContainer, PageHeader } from "@/components/ui/page-components";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { axiosInstance } from "@/lib/api";
+import { SkeletonHeader, SkeletonTreeNode } from "@/components/ui/skeleton";
 
 type TreeNode = {
   id: string;
@@ -774,8 +775,9 @@ export default function AdminBinaryTreePage() {
   if (loading) {
     return (
       <PageContainer maxWidth="full">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <SkeletonHeader />
+        <div className="flex justify-center py-12">
+          <SkeletonTreeNode />
         </div>
       </PageContainer>
     );

@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { axiosInstance } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { SkeletonHeader, SkeletonStatsGrid, SkeletonTable } from "@/components/ui/skeleton";
 
 interface Transaction {
   id: string;
@@ -175,9 +176,10 @@ export default function AdminEarningsPage() {
   if (loading) {
     return (
       <PageContainer maxWidth="2xl">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-        </div>
+        <SkeletonHeader />
+        <SkeletonStatsGrid cols={4} />
+        <SkeletonStatsGrid cols={4} />
+        <SkeletonTable rows={6} cols={5} />
       </PageContainer>
     );
   }

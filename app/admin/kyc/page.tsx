@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -129,6 +130,21 @@ export default function AdminKYCPage() {
       </div>
 
       {/* Stats Cards */}
+      {!stats && loading && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-card border border-border rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-8 w-12" />
+                </div>
+                <Skeleton className="w-8 h-8 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="bg-amber-50 border-amber-200">
@@ -219,8 +235,16 @@ export default function AdminKYCPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="space-y-3 py-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 p-3 border-b border-border">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                </div>
+              ))}
             </div>
           ) : filteredSubmissions.length === 0 ? (
             <div className="text-center py-8 text-gray-500">

@@ -21,6 +21,7 @@ import {
 import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { axiosInstance } from "@/lib/api";
+import Link from "next/link";
 
 interface Plan {
   id: string;
@@ -36,19 +37,35 @@ interface Plan {
   popular: boolean;
 }
 
+function formatCount(num: number): string {
+  if (num >= 10000000) return `${(num / 10000000).toFixed(1)}Cr+`;
+  if (num >= 100000) return `${(num / 100000).toFixed(1)}L+`;
+  if (num >= 1000) return `${(num / 1000).toFixed(0)}K+`;
+  return `${num}+`;
+}
+
+function formatCurrency(num: number): string {
+  if (num >= 10000000) return `₹${(num / 10000000).toFixed(1)}Cr+`;
+  if (num >= 100000) return `₹${(num / 100000).toFixed(1)}L+`;
+  if (num >= 1000) return `₹${(num / 1000).toFixed(0)}K+`;
+  return `₹${num}`;
+}
+
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [settings, setSettings] = useState<any>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ totalMembers: 0, activeMembers: 0, totalPayouts: 0, totalEarnings: 0, totalPlans: 0 });
 
   // Fetch public settings and plans from backend
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [settingsRes, plansRes] = await Promise.all([
+        const [settingsRes, plansRes, statsRes] = await Promise.all([
           axiosInstance.get("/api/settings/public"),
           axiosInstance.get("/api/plans"),
+          axiosInstance.get("/api/stats/public"),
         ]);
 
         if (settingsRes.data.success) {
@@ -57,6 +74,10 @@ export default function Home() {
 
         if (plansRes.data.success) {
           setPlans(plansRes.data.data.filter((p: Plan) => p.isActive));
+        }
+
+        if (statsRes.data.success) {
+          setStats(statsRes.data.data);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -241,16 +262,22 @@ export default function Home() {
               <Button
                 size="lg"
                 className="gap-2 text-base px-8 py-6 bg-primary-400 hover:bg-primary-500 text-primary-foreground"
+                asChild
               >
-                {slides[currentSlide].ctaPrimary}
-                <ArrowRight className="w-5 h-5" />
+                <Link href="/register">
+                  {slides[currentSlide].ctaPrimary}
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
               </Button>
               <Button
                 size="lg"
                 variant="outline"
                 className="text-base px-8 py-6 bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
+                asChild
               >
-                {slides[currentSlide].ctaSecondary}
+                <Link href="/plans">
+                  {slides[currentSlide].ctaSecondary}
+                </Link>
               </Button>
             </div>
           </motion.div>
@@ -854,8 +881,9 @@ export default function Home() {
                             ? "bg-white text-primary-600 hover:bg-white/90"
                             : "bg-primary-400 text-primary-foreground hover:bg-primary-500"
                         }`}
+                        asChild
                       >
-                        Get Started
+                        <Link href="/register">Get Started</Link>
                       </Button>
                     </div>
 
@@ -913,16 +941,18 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mt-12"
           >
-            <Button variant="outline" size="lg" className="gap-2">
-              View Full Plans
-              <ArrowRight className="w-4 h-4" />
+            <Button variant="outline" size="lg" className="gap-2" asChild>
+              <Link href="/plans">
+                View Full Plans
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </Button>
           </motion.div>
         </div>
       </section>
 
-      {/* Testimonials - Sliding Marquee Design */}
-      <section className="py-20 md:py-32 bg-base-50 overflow-hidden">
+      {/* Why Choose Us Section */}
+      <section className="py-20 md:py-32 bg-base-50">
         <div className="mx-auto max-w-7xl px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -932,238 +962,41 @@ export default function Home() {
             className="text-center space-y-4 mb-12"
           >
             <Badge className="bg-primary-400 text-primary-foreground border-0">
-              Testimonials
+              Why Choose Us
             </Badge>
             <h2 className="text-4xl font-medium lg:text-5xl max-w-2xl mx-auto">
-              What Our <span className="text-primary-600">Members</span> Say
+              Built for <span className="text-primary-600">Trust</span> & Transparency
             </h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Join thousands of successful network builders achieving their
-              financial goals with VSV Unite.
+              A platform designed with fairness, security, and your growth in mind.
             </p>
           </motion.div>
 
-          {/* Sliding Testimonials Row 1 */}
-          <div
-            className="relative overflow-hidden mb-6"
-            style={{
-              maskImage:
-                "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
-            }}
-          >
-            <motion.div
-              className="flex gap-6"
-              animate={{ x: [0, -1920] }}
-              transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-            >
-              {[...Array(2)].map((_, setIndex) => (
-                <div key={setIndex} className="flex gap-6 shrink-0">
-                  {[
-                    {
-                      quote:
-                        "VSV Unite has completely transformed my financial journey. The binary structure is incredibly easy to understand!",
-                      name: "Rajesh Kumar",
-                      role: "Network Leader",
-                      earnings: "₹5L+ Monthly",
-                      avatar: "RK",
-                      image:
-                        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces",
-                    },
-                    {
-                      quote:
-                        "The real-time wallet updates are amazing. I can see my earnings grow as my team performs.",
-                      name: "Priya Sharma",
-                      role: "Team Builder",
-                      earnings: "₹2L+ Monthly",
-                      avatar: "PS",
-                      image:
-                        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces",
-                    },
-                    {
-                      quote:
-                        "Started 3 months ago and already earning consistently. The system is truly transparent!",
-                      name: "Amit Patel",
-                      role: "Professional Member",
-                      earnings: "₹50K Monthly",
-                      avatar: "AP",
-                      image:
-                        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces",
-                    },
-                    {
-                      quote:
-                        "Support team is incredible. They helped me understand everything in just one call!",
-                      name: "Sunita Mehta",
-                      role: "Starter Member",
-                      earnings: "₹25K Monthly",
-                      avatar: "SM",
-                      image:
-                        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=faces",
-                    },
-                  ].map((testimonial, index) => (
-                    <div
-                      key={`${setIndex}-${index}`}
-                      className="shrink-0 w-[400px] border border-primary-200 bg-card rounded-2xl overflow-hidden hover:border-primary-400 transition-colors"
-                    >
-                      <div className="p-6">
-                        <p className="text-lg font-light leading-relaxed text-foreground">
-                          &ldquo;{testimonial.quote}&rdquo;
-                        </p>
-                      </div>
-                      <div className="border-t border-primary-100 px-6 py-4 flex items-center gap-4">
-                        <Avatar className="w-12 h-12 ring-2 ring-primary-200">
-                          <AvatarImage
-                            src={testimonial.image}
-                            alt={testimonial.name}
-                          />
-                          <AvatarFallback className="bg-primary-200 text-primary-700 font-semibold">
-                            {testimonial.avatar}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <p className="font-medium text-foreground">
-                            {testimonial.name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {testimonial.role}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-semibold text-primary-600">
-                            {testimonial.earnings}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </motion.div>
-          </div>
-
-          {/* Sliding Testimonials Row 2 - Reverse Direction */}
-          <div
-            className="relative overflow-hidden"
-            style={{
-              maskImage:
-                "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
-            }}
-          >
-            <motion.div
-              className="flex gap-6"
-              animate={{ x: [-1920, 0] }}
-              transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
-            >
-              {[...Array(2)].map((_, setIndex) => (
-                <div key={setIndex} className="flex gap-6 shrink-0">
-                  {[
-                    {
-                      quote:
-                        "The PV matching system is completely transparent. No hidden fees, no surprises!",
-                      name: "Vikram Singh",
-                      role: "Enterprise Member",
-                      earnings: "₹8L+ Monthly",
-                      avatar: "VS",
-                      image:
-                        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=faces",
-                    },
-                    {
-                      quote:
-                        "Best MLM platform I've ever used. The dashboard gives me complete visibility into my network.",
-                      name: "Meera Reddy",
-                      role: "Team Leader",
-                      earnings: "₹3L+ Monthly",
-                      avatar: "MR",
-                      image:
-                        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces",
-                    },
-                    {
-                      quote:
-                        "Withdrawals are fast and hassle-free. I get my earnings within 24 hours every time.",
-                      name: "Arjun Nair",
-                      role: "Professional Member",
-                      earnings: "₹1L+ Monthly",
-                      avatar: "AN",
-                      image:
-                        "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop&crop=faces",
-                    },
-                    {
-                      quote:
-                        "The binary structure makes it so easy to explain to new members. My team is growing fast!",
-                      name: "Kavita Joshi",
-                      role: "Network Builder",
-                      earnings: "₹75K Monthly",
-                      avatar: "KJ",
-                      image:
-                        "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop&crop=faces",
-                    },
-                  ].map((testimonial, index) => (
-                    <div
-                      key={`${setIndex}-${index}`}
-                      className="shrink-0 w-[400px] border border-primary-200 bg-card rounded-2xl overflow-hidden hover:border-primary-400 transition-colors"
-                    >
-                      <div className="p-6">
-                        <p className="text-lg font-light leading-relaxed text-foreground">
-                          &ldquo;{testimonial.quote}&rdquo;
-                        </p>
-                      </div>
-                      <div className="border-t border-primary-100 px-6 py-4 flex items-center gap-4">
-                        <Avatar className="w-12 h-12 ring-2 ring-primary-200">
-                          <AvatarImage
-                            src={testimonial.image}
-                            alt={testimonial.name}
-                          />
-                          <AvatarFallback className="bg-primary-100 text-primary-700 font-semibold">
-                            {testimonial.avatar}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <p className="font-medium text-foreground">
-                            {testimonial.name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {testimonial.role}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-semibold text-primary-600">
-                            {testimonial.earnings}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </motion.div>
-          </div>
-
-          {/* Stats Row */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            viewport={{ once: true }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16 max-w-4xl mx-auto"
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
-              { value: "10,000+", label: "Active Members" },
-              { value: "₹50Cr+", label: "Total Payouts" },
-              { value: "95%", label: "Success Rate" },
-              { value: "24/7", label: "Support Available" },
-            ].map((stat, index) => (
-              <div
+              { icon: Shield, title: "Secure Platform", description: "Your data and funds are protected with encrypted systems and secure transaction protocols." },
+              { icon: TrendingUp, title: "Transparent Earnings", description: "Every PV point and matching bonus is calculated automatically and visible in your dashboard." },
+              { icon: Wallet, title: "Fast Withdrawals", description: "Request withdrawals anytime from your dashboard with quick processing." },
+              { icon: Network, title: "Binary Structure", description: "Simple left-right team structure that's easy to understand and grow." },
+              { icon: BarChart3, title: "Real-time Dashboard", description: "Track your team performance, earnings, and growth with live updates." },
+              { icon: Users, title: "Easy Referrals", description: "Simple tools to invite new members and manage your growing network." },
+            ].map((item, index) => (
+              <motion.div
                 key={index}
-                className="text-center p-6 rounded-xl bg-card border border-primary-100 hover:border-primary-300 transition-colors"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="text-center p-8 rounded-2xl bg-card border border-primary-100 hover:border-primary-300 hover:shadow-lg transition-all group"
               >
-                <div className="text-2xl md:text-3xl font-bold text-primary-600">
-                  {stat.value}
+                <div className="w-14 h-14 rounded-xl bg-primary-400/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary-400 group-hover:scale-110 transition-all">
+                  <item.icon className="w-7 h-7 text-primary-600 group-hover:text-primary-foreground transition-colors" />
                 </div>
-                <div className="text-sm text-muted-foreground mt-1">
-                  {stat.label}
-                </div>
-              </div>
+                <h3 className="text-lg font-semibold mb-2 group-hover:text-primary-600 transition-colors">{item.title}</h3>
+                <p className="text-sm text-muted-foreground">{item.description}</p>
+              </motion.div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -1341,16 +1174,16 @@ export default function Home() {
 
             {/* Description */}
             <p className="text-xl text-white/90 max-w-2xl mx-auto leading-relaxed mb-6">
-              Join 10,000+ successful members who are already earning with VSV
+              Join our growing community of members who are earning with VSV
               Unite&apos;s transparent and automated MLM system.
             </p>
 
             {/* Stats Row */}
             <div className="grid grid-cols-3 gap-6 max-w-3xl mx-auto py-6">
               {[
-                { value: "10K+", label: "Active Members" },
-                { value: "₹50Cr+", label: "Paid Out" },
-                { value: "95%", label: "Success Rate" },
+                { value: formatCount(stats.totalMembers), label: "Total Members" },
+                { value: formatCurrency(stats.totalPayouts), label: "Paid Out" },
+                { value: formatCount(stats.activeMembers), label: "Active Members" },
               ].map((stat, index) => (
                 <motion.div
                   key={index}
@@ -1379,16 +1212,20 @@ export default function Home() {
               <Button
                 size="lg"
                 className="gap-2 text-base px-10 py-7 bg-white text-primary-600 hover:bg-white/90 shadow-2xl hover:scale-105 transition-transform font-semibold"
+                asChild
               >
-                Get Started Now
-                <ArrowRight className="w-5 h-5" />
+                <Link href="/register">
+                  Get Started Now
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
               </Button>
               <Button
                 size="lg"
                 variant="outline"
                 className="text-base px-10 py-7 bg-transparent border-2 border-white text-white hover:bg-white/10 backdrop-blur-sm"
+                asChild
               >
-                Contact Support
+                <Link href="/contact">Contact Support</Link>
               </Button>
             </motion.div>
 

@@ -1,6 +1,7 @@
 "use client";
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { axiosInstance } from "@/lib/api";
 
@@ -38,56 +39,31 @@ export default function Footer() {
   }, []);
 
   const footerLinks = [
-    {
-      title: "Product",
-      links: [
-        { text: "Features", href: "#features" },
-        { text: "How It Works", href: "#how-it-works" },
-        { text: "Pricing Plans", href: "#plans" },
-        { text: "Testimonials", href: "#testimonials" },
-      ],
-    },
-    {
-      title: "Company",
-      links: [
-        { text: "About Us", href: "#about" },
-        { text: "Contact", href: "#contact" },
-        { text: "Careers", href: "#careers" },
-        { text: "Blog", href: "#blog" },
-      ],
-    },
-    {
-      title: "Support",
-      links: [
-        { text: "Help Center", href: "#help" },
-        { text: "FAQs", href: "#faq" },
-        { text: "Training", href: "#training" },
-        { text: "Community", href: "#community" },
-      ],
-    },
-    {
-      title: "Legal",
-      links: [
-        { text: "Privacy Policy", href: "#privacy" },
-        { text: "Terms of Service", href: "#terms" },
-        { text: "Refund Policy", href: "#refund" },
-        { text: "Compliance", href: "#compliance" },
-      ],
-    },
+    { text: "Home", href: "/" },
+    { text: "About Us", href: "/about" },
+    { text: "Plans", href: "/plans" },
+    { text: "Contact", href: "/contact" },
   ];
+
+  const socialLinks = [
+    { icon: Facebook, url: settings.facebookUrl, label: "Facebook" },
+    { icon: Twitter, url: settings.twitterUrl, label: "Twitter" },
+    { icon: Instagram, url: settings.instagramUrl, label: "Instagram" },
+    { icon: Linkedin, url: settings.linkedinUrl, label: "LinkedIn" },
+  ].filter((s) => s.url);
 
   return (
     <footer className="bg-base-50 border-t border-border">
       <div className="container mx-auto px-6 py-12 md:py-16">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
           {/* Brand Section */}
-          <div className="lg:col-span-2">
+          <div>
             <div className="flex items-center gap-3 mb-4">
-              <Image 
-                src="/assets/images/logo/vsv-unite-new.jpeg" 
+              <Image
+                src="/assets/images/logo/vsv-unite-new.jpeg"
                 alt={`${settings.companyName || 'VSV Unite'} Logo`}
-                width={56} 
+                width={56}
                 height={56}
                 className="w-14 h-14 object-contain"
               />
@@ -96,46 +72,53 @@ export default function Footer() {
             <p className="text-muted-foreground mb-6 max-w-sm">
               {settings.companyDescription || 'Building transparent and automated network income opportunities for thousands of successful members worldwide.'}
             </p>
-            
-            {/* Contact Info */}
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Mail className="w-4 h-4 text-primary-500" />
-                <a href={`mailto:${settings.companyEmail || settings.supportEmail || 'support@vsvunite.com'}`} className="hover:text-primary-600 transition-colors">
-                  {settings.companyEmail || settings.supportEmail || 'support@vsvunite.com'}
-                </a>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Phone className="w-4 h-4 text-primary-500" />
-                <a href={`tel:${(settings.companyPhone || settings.supportPhone || '+911234567890').replace(/\s/g, '')}`} className="hover:text-primary-600 transition-colors">
-                  {settings.companyPhone || settings.supportPhone || '+91 123 456 7890'}
-                </a>
-              </div>
-              <div className="flex items-start gap-2 text-muted-foreground">
-                <MapPin className="w-4 h-4 text-primary-500 mt-0.5" />
-                <span>{settings.companyAddress || settings.address || 'Mumbai, Maharashtra, India'}</span>
-              </div>
-            </div>
           </div>
 
-          {/* Links Sections */}
-          {footerLinks.map((section, index) => (
-            <div key={index}>
-              <h3 className="font-semibold text-foreground mb-4">{section.title}</h3>
-              <ul className="space-y-3">
-                {section.links.map((link, linkIndex) => (
-                  <li key={linkIndex}>
-                    <a
-                      href={link.href}
-                      className="text-muted-foreground hover:text-primary-600 transition-colors text-sm"
-                    >
-                      {link.text}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+          {/* Quick Links */}
+          <div>
+            <h3 className="font-semibold text-foreground mb-4">Quick Links</h3>
+            <ul className="space-y-3">
+              {footerLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-muted-foreground hover:text-primary-600 transition-colors text-sm"
+                  >
+                    {link.text}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact Info */}
+          <div>
+            <h3 className="font-semibold text-foreground mb-4">Contact Us</h3>
+            <div className="space-y-3 text-sm">
+              {(settings.companyEmail || settings.supportEmail) && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Mail className="w-4 h-4 text-primary-500" />
+                  <a href={`mailto:${settings.companyEmail || settings.supportEmail}`} className="hover:text-primary-600 transition-colors">
+                    {settings.companyEmail || settings.supportEmail}
+                  </a>
+                </div>
+              )}
+              {(settings.companyPhone || settings.supportPhone) && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Phone className="w-4 h-4 text-primary-500" />
+                  <a href={`tel:${(settings.companyPhone || settings.supportPhone || '').replace(/\s/g, '')}`} className="hover:text-primary-600 transition-colors">
+                    {settings.companyPhone || settings.supportPhone}
+                  </a>
+                </div>
+              )}
+              {(settings.companyAddress || settings.address) && (
+                <div className="flex items-start gap-2 text-muted-foreground">
+                  <MapPin className="w-4 h-4 text-primary-500 mt-0.5" />
+                  <span>{settings.companyAddress || settings.address}</span>
+                </div>
+              )}
             </div>
-          ))}
+          </div>
         </div>
 
         {/* Divider */}
@@ -148,45 +131,23 @@ export default function Footer() {
             © {currentYear} {settings.companyName || 'VSV Unite'}. All rights reserved.
           </p>
 
-          {/* Social Links */}
-          <div className="flex items-center gap-4">
-            <a
-              href={settings.facebookUrl || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Facebook"
-              className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 hover:bg-primary-400 hover:text-primary-foreground transition-all"
-            >
-              <Facebook className="w-4 h-4" />
-            </a>
-            <a
-              href={settings.twitterUrl || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Twitter"
-              className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 hover:bg-primary-400 hover:text-primary-foreground transition-all"
-            >
-              <Twitter className="w-4 h-4" />
-            </a>
-            <a
-              href={settings.instagramUrl || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Instagram"
-              className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 hover:bg-primary-400 hover:text-primary-foreground transition-all"
-            >
-              <Instagram className="w-4 h-4" />
-            </a>
-            <a
-              href={settings.linkedinUrl || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn"
-              className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 hover:bg-primary-400 hover:text-primary-foreground transition-all"
-            >
-              <Linkedin className="w-4 h-4" />
-            </a>
-          </div>
+          {/* Social Links - only show if URLs exist in settings */}
+          {socialLinks.length > 0 && (
+            <div className="flex items-center gap-4">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.label}
+                  className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 hover:bg-primary-400 hover:text-primary-foreground transition-all"
+                >
+                  <social.icon className="w-4 h-4" />
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </footer>

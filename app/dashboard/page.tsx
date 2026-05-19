@@ -308,7 +308,7 @@ export default function UserDashboard() {
                 <span>Invite Member</span>
               </Button>
             </Link>
-            <Link href="/dashboard/payout-reports" className="w-full sm:col-span-2">
+            <Link href="/dashboard/payout-request" className="w-full sm:col-span-2">
               <Button className="w-full h-auto py-4 flex flex-col items-center gap-2 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 shadow-sm">
                 <Wallet className="w-6 h-6" />
                 <span>Request Withdrawal</span>

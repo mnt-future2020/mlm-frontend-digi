@@ -45,9 +45,30 @@ interface Plan {
   popular: boolean;
 }
 
+function formatCount(num: number): string {
+  if (num >= 10000000) return `${(num / 10000000).toFixed(1)}Cr+`;
+  if (num >= 100000) return `${(num / 100000).toFixed(1)}L+`;
+  if (num >= 1000) return `${(num / 1000).toFixed(0)}K+`;
+  return `${num}+`;
+}
+
+function formatCurrency(num: number): string {
+  if (num >= 10000000) return `₹${(num / 10000000).toFixed(1)}Cr+`;
+  if (num >= 100000) return `₹${(num / 100000).toFixed(1)}L+`;
+  if (num >= 1000) return `₹${(num / 1000).toFixed(0)}K+`;
+  return `₹${num}`;
+}
+
 export default function PlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ totalMembers: 0, activeMembers: 0, totalPayouts: 0 });
+
+  useEffect(() => {
+    axiosInstance.get("/api/stats/public").then((res) => {
+      if (res.data.success) setStats(res.data.data);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -255,9 +276,9 @@ export default function PlansPage() {
                     <Users className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="font-bold">10,000+</p>
+                    <p className="font-bold">{formatCount(stats.totalMembers)}</p>
                     <p className="text-xs text-muted-foreground">
-                      Active Users
+                      Total Members
                     </p>
                   </div>
                 </div>
@@ -266,7 +287,7 @@ export default function PlansPage() {
                     <TrendingUp className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="font-bold">₹50Cr+</p>
+                    <p className="font-bold">{formatCurrency(stats.totalPayouts)}</p>
                     <p className="text-xs text-muted-foreground">Paid Out</p>
                   </div>
                 </div>
@@ -275,8 +296,8 @@ export default function PlansPage() {
                     <Star className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="font-bold">4.9/5</p>
-                    <p className="text-xs text-muted-foreground">User Rating</p>
+                    <p className="font-bold">{formatCount(stats.activeMembers)}</p>
+                    <p className="text-xs text-muted-foreground">Active Members</p>
                   </div>
                 </div>
               </div>
@@ -745,9 +766,12 @@ export default function PlansPage() {
                               : ""
                           }`}
                           variant={plan.popular ? "default" : "outline"}
+                          asChild
                         >
-                          Get Started with {plan.name}
-                          <ArrowRight className="w-5 h-5 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                          <Link href="/register">
+                            Get Started with {plan.name}
+                            <ArrowRight className="w-5 h-5 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                          </Link>
                         </Button>
 
                         <p className="text-center text-sm text-muted-foreground mt-4 flex items-center justify-center gap-2">
@@ -1048,19 +1072,22 @@ export default function PlansPage() {
               <Gift className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-              Start Your 14-Day Free Trial
+              Ready to Get Started?
             </h2>
             <p className="text-xl text-white/90 mb-6 max-w-2xl mx-auto">
-              No credit card required. Experience all Pro features free for 14
-              days.
+              Choose a plan that suits you and start building your network
+              today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
                 className="bg-white text-primary hover:bg-white/90 gap-2"
+                asChild
               >
-                <Zap className="w-5 h-5" />
-                Start Free Trial
+                <Link href="/register">
+                  <Zap className="w-5 h-5" />
+                  Get Started Now
+                </Link>
               </Button>
               <Button
                 size="lg"
@@ -1080,7 +1107,7 @@ export default function PlansPage() {
               </div>
               <div className="flex items-center gap-2 text-white/80">
                 <Users className="w-5 h-5" />
-                <span className="text-sm">10,000+ Members</span>
+                <span className="text-sm">{formatCount(stats.totalMembers)} Members</span>
               </div>
               <div className="flex items-center gap-2 text-white/80">
                 <Award className="w-5 h-5" />

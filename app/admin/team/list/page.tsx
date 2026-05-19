@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Users, Search, ChevronLeft, ChevronRight, UserPlus, Eye, X } from "lucide-react";
 import { axiosInstance } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import {
@@ -355,11 +356,17 @@ export default function AdminTeamListPage() {
       {/* Team Members Table */}
       <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading team members...</p>
-            </div>
+          <div className="p-1">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-4 border-b border-border">
+                <Skeleton className="w-10 h-10 rounded-full" />
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+            ))}
           </div>
         ) : filteredMembers.length === 0 ? (
           <div className="text-center py-12">

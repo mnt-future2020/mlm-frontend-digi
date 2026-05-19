@@ -24,8 +24,32 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useState, useEffect } from "react";
+import { axiosInstance } from "@/lib/api";
+
+function formatCount(num: number): string {
+  if (num >= 10000000) return `${(num / 10000000).toFixed(1)}Cr+`;
+  if (num >= 100000) return `${(num / 100000).toFixed(1)}L+`;
+  if (num >= 1000) return `${(num / 1000).toFixed(0)}K+`;
+  return `${num}+`;
+}
+
+function formatCurrency(num: number): string {
+  if (num >= 10000000) return `₹${(num / 10000000).toFixed(1)}Cr+`;
+  if (num >= 100000) return `₹${(num / 100000).toFixed(1)}L+`;
+  if (num >= 1000) return `₹${(num / 1000).toFixed(0)}K+`;
+  return `₹${num}`;
+}
 
 export default function AboutPage() {
+  const [stats, setStats] = useState({ totalMembers: 0, activeMembers: 0, totalPayouts: 0 });
+
+  useEffect(() => {
+    axiosInstance.get("/api/stats/public").then((res) => {
+      if (res.data.success) setStats(res.data.data);
+    }).catch(() => {});
+  }, []);
+
   const offerings = [
     { title: "Membership-based Earning", description: "Structured earning system based on membership tiers", icon: Users },
     { title: "Real-time PV Matching", description: "Instant point value matching and income calculation", icon: Zap },
@@ -86,11 +110,13 @@ export default function AboutPage() {
                 </p>
               </div>
               <div className="flex flex-row gap-4 pt-2">
-                <Button size="lg" className="gap-2">
-                  Get Started <ArrowRight className="w-4 h-4" />
+                <Button size="lg" className="gap-2" asChild>
+                  <Link href="/register">
+                    Get Started <ArrowRight className="w-4 h-4" />
+                  </Link>
                 </Button>
-                <Button size="lg" variant="outline">
-                  Learn More
+                <Button size="lg" variant="outline" asChild>
+                  <Link href="/plans">Learn More</Link>
                 </Button>
               </div>
             </motion.div>
@@ -218,16 +244,16 @@ export default function AboutPage() {
                     {/* Stats */}
                     <div className="flex gap-8 mt-8 pt-6 border-t border-white/20">
                       <div>
-                        <p className="text-3xl font-bold text-white">10K+</p>
-                        <p className="text-sm text-white/70">Active Members</p>
+                        <p className="text-3xl font-bold text-white">{formatCount(stats.totalMembers)}</p>
+                        <p className="text-sm text-white/70">Total Members</p>
                       </div>
                       <div>
-                        <p className="text-3xl font-bold text-white">₹50Cr+</p>
+                        <p className="text-3xl font-bold text-white">{formatCurrency(stats.totalPayouts)}</p>
                         <p className="text-sm text-white/70">Paid Out</p>
                       </div>
                       <div>
-                        <p className="text-3xl font-bold text-white">4.9★</p>
-                        <p className="text-sm text-white/70">User Rating</p>
+                        <p className="text-3xl font-bold text-white">{formatCount(stats.activeMembers)}</p>
+                        <p className="text-sm text-white/70">Active Members</p>
                       </div>
                     </div>
                   </div>
@@ -671,10 +697,13 @@ export default function AboutPage() {
               <Button
                 size="lg"
                 className="group relative bg-white text-primary hover:bg-white/90 gap-2 px-8 py-6 text-base font-semibold shadow-2xl shadow-black/20 hover:shadow-white/20 transition-all duration-300"
+                asChild
               >
-                <CheckCircle2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                Get Started Today
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <Link href="/register">
+                  <CheckCircle2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  Get Started Today
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
               </Button>
               <Button
                 size="lg"
@@ -682,7 +711,7 @@ export default function AboutPage() {
                 className="border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 bg-transparent backdrop-blur-sm px-8 py-6 text-base font-semibold transition-all duration-300"
                 asChild
               >
-                <Link href="/#contact">Contact Us</Link>
+                <Link href="/contact">Contact Us</Link>
               </Button>
             </motion.div>
 
@@ -705,7 +734,7 @@ export default function AboutPage() {
                     </div>
                   ))}
                 </div>
-                <span className="text-sm text-white/80 font-medium">10,000+ Active Members</span>
+                <span className="text-sm text-white/80 font-medium">{formatCount(stats.totalMembers)} Members</span>
               </div>
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-white/80" />

@@ -84,7 +84,7 @@ export default function ContactPage() {
     {
       icon: Phone,
       title: "Call Us",
-      value: settings.supportPhone || settings.companyPhone || "+91 XXXXX XXXXX",
+      value: settings.supportPhone || settings.companyPhone || "",
       description: "Mon-Sat, 9AM to 6PM IST",
     },
     {
@@ -220,7 +220,7 @@ export default function ContactPage() {
                         <Input
                           name="phone"
                           type="tel"
-                          placeholder="+91 XXXXX XXXXX"
+                          placeholder="Your phone number"
                           value={formData.phone}
                           onChange={handleChange}
                         />
@@ -331,7 +331,7 @@ export default function ContactPage() {
                       <span className="font-medium text-foreground">
                         {settings.supportPhone ||
                           settings.companyPhone ||
-                          "+91 XXXXX XXXXX"}
+                          ""}
                       </span>
                     </p>
                   </div>

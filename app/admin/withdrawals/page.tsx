@@ -14,6 +14,7 @@ import {
 import { useAuth } from "@/contexts/auth-context";
 import { axiosInstance } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { SkeletonHeader, SkeletonStatsGrid, SkeletonTable } from "@/components/ui/skeleton";
 
 interface Withdrawal {
   id: string;
@@ -107,9 +108,9 @@ export default function AdminWithdrawalsPage() {
   if (loading) {
     return (
       <PageContainer maxWidth="full">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-        </div>
+        <SkeletonHeader />
+        <SkeletonStatsGrid cols={3} />
+        <SkeletonTable rows={6} cols={5} />
       </PageContainer>
     );
   }

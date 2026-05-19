@@ -40,6 +40,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { axiosInstance } from "@/lib/api";
+import { SkeletonHeader, SkeletonStatsGrid, SkeletonTable } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
 import { toast } from "sonner";
 
@@ -390,9 +391,9 @@ export default function ManageMembersPage() {
   if (loading) {
     return (
       <PageContainer maxWidth="full">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-        </div>
+        <SkeletonHeader />
+        <SkeletonStatsGrid cols={4} />
+        <SkeletonTable rows={8} cols={6} />
       </PageContainer>
     );
   }

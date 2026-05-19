@@ -107,7 +107,7 @@ export default function DashboardLayout({
       label: "Payout Request",
       href: "/dashboard/payout-request",
       icon: <FileText className="w-5 h-5" />,
-      isActive: pathname === "/dashboard/payout-reports",
+      isActive: pathname === "/dashboard/payout-request",
     },
     {
       label: "Tutorials",

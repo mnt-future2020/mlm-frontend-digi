@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Users, TrendingUp, DollarSign, LayoutDashboard, AlertCircle, Package, Wallet } from "lucide-react";
+import { SkeletonHeader, SkeletonStatsGrid, SkeletonCard } from "@/components/ui/skeleton";
 import { PageContainer, PageHeader, StatsCard } from "@/components/ui/page-components";
 import { useAuth } from "@/contexts/auth-context";
 import { axiosInstance } from "@/lib/api";
@@ -60,8 +61,12 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <PageContainer maxWidth="full">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <SkeletonHeader />
+        <SkeletonStatsGrid cols={4} />
+        <SkeletonStatsGrid cols={4} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SkeletonCard className="h-64" />
+          <SkeletonCard className="h-64" />
         </div>
       </PageContainer>
     );
