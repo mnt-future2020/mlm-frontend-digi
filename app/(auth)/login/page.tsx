@@ -182,30 +182,36 @@ export default function LoginPage() {
             transition={{ duration: 0.5, delay: 0.4 }}
             className="flex gap-6 lg:gap-12"
           >
-            <div>
-              <div className="text-2xl lg:text-4xl font-bold text-white">
-                {formatCount(stats.totalMembers)}
+            {stats.totalMembers > 0 && (
+              <div>
+                <div className="text-2xl lg:text-4xl font-bold text-white">
+                  {formatCount(stats.totalMembers)}
+                </div>
+                <div className="text-white/60 text-xs lg:text-sm">
+                  Total Members
+                </div>
               </div>
-              <div className="text-white/60 text-xs lg:text-sm">
-                Total Members
+            )}
+            {stats.totalPayouts > 0 && (
+              <div>
+                <div className="text-2xl lg:text-4xl font-bold text-white">
+                  {formatCurrency(stats.totalPayouts)}
+                </div>
+                <div className="text-white/60 text-xs lg:text-sm">
+                  Total Payouts
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="text-2xl lg:text-4xl font-bold text-white">
-                {formatCurrency(stats.totalPayouts)}
+            )}
+            {stats.activeMembers > 0 && (
+              <div>
+                <div className="text-2xl lg:text-4xl font-bold text-white">
+                  {formatCount(stats.activeMembers)}
+                </div>
+                <div className="text-white/60 text-xs lg:text-sm">
+                  Active Members
+                </div>
               </div>
-              <div className="text-white/60 text-xs lg:text-sm">
-                Total Payouts
-              </div>
-            </div>
-            <div>
-              <div className="text-2xl lg:text-4xl font-bold text-white">
-                {formatCount(stats.activeMembers)}
-              </div>
-              <div className="text-white/60 text-xs lg:text-sm">
-                Active Members
-              </div>
-            </div>
+            )}
           </motion.div>
         </div>
       </div>

@@ -128,7 +128,8 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           {/* Copyright */}
           <p className="text-sm text-muted-foreground text-center md:text-left">
-            © {currentYear} {settings.companyName || 'VSV Unite'}. All rights reserved.
+            © {currentYear} {settings.companyName || 'VSV Unite'}. All rights reserved. Developed with ❤️ by{' '}
+            <a href="https://www.mntfuture.com/" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline font-medium">MnT</a>
           </p>
 
           {/* Social Links - only show if URLs exist in settings */}

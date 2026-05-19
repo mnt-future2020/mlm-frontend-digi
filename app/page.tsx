@@ -62,22 +62,22 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [settingsRes, plansRes, statsRes] = await Promise.all([
+        const [settingsRes, plansRes, statsRes] = await Promise.allSettled([
           axiosInstance.get("/api/settings/public"),
           axiosInstance.get("/api/plans"),
           axiosInstance.get("/api/stats/public"),
         ]);
 
-        if (settingsRes.data.success) {
-          setSettings(settingsRes.data.data);
+        if (settingsRes.status === "fulfilled" && settingsRes.value.data.success) {
+          setSettings(settingsRes.value.data.data);
         }
 
-        if (plansRes.data.success) {
-          setPlans(plansRes.data.data.filter((p: Plan) => p.isActive));
+        if (plansRes.status === "fulfilled" && plansRes.value.data.success) {
+          setPlans(plansRes.value.data.data.filter((p: Plan) => p.isActive));
         }
 
-        if (statsRes.data.success) {
-          setStats(statsRes.data.data);
+        if (statsRes.status === "fulfilled" && statsRes.value.data.success) {
+          setStats(statsRes.value.data.data);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -1179,27 +1179,33 @@ export default function Home() {
             </p>
 
             {/* Stats Row */}
-            <div className="grid grid-cols-3 gap-6 max-w-3xl mx-auto py-6">
-              {[
-                { value: formatCount(stats.totalMembers), label: "Total Members" },
-                { value: formatCurrency(stats.totalPayouts), label: "Paid Out" },
-                { value: formatCount(stats.activeMembers), label: "Active Members" },
-              ].map((stat, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  className="text-center"
-                >
-                  <div className="text-3xl md:text-4xl font-bold text-white">
-                    {stat.value}
-                  </div>
-                  <div className="text-sm text-white/80 mt-1">{stat.label}</div>
-                </motion.div>
-              ))}
-            </div>
+            {(() => {
+              const visibleStats = [
+                { value: stats.totalMembers, formatted: formatCount(stats.totalMembers), label: "Total Members" },
+                { value: stats.totalPayouts, formatted: formatCurrency(stats.totalPayouts), label: "Paid Out" },
+                { value: stats.activeMembers, formatted: formatCount(stats.activeMembers), label: "Active Members" },
+              ].filter((s) => s.value > 0);
+              if (visibleStats.length === 0) return null;
+              return (
+                <div className={`grid grid-cols-${visibleStats.length} gap-6 max-w-3xl mx-auto py-6`}>
+                  {visibleStats.map((stat, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      viewport={{ once: true }}
+                      className="text-center"
+                    >
+                      <div className="text-3xl md:text-4xl font-bold text-white">
+                        {stat.formatted}
+                      </div>
+                      <div className="text-sm text-white/80 mt-1">{stat.label}</div>
+                    </motion.div>
+                  ))}
+                </div>
+              );
+            })()}
 
             {/* CTA Buttons */}
             <motion.div

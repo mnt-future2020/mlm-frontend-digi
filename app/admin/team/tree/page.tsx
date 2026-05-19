@@ -23,7 +23,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { axiosInstance } from "@/lib/api";
-import { SkeletonHeader, SkeletonTreeNode } from "@/components/ui/skeleton";
 
 type TreeNode = {
   id: string;
@@ -608,9 +607,8 @@ export default function AdminBinaryTreePage() {
 
   if (loading) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8">
-        <SkeletonHeader />
-        <div className="flex justify-center py-12"><SkeletonTreeNode /></div>
+      <div className="p-4 sm:p-6 lg:p-8 flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
   }
